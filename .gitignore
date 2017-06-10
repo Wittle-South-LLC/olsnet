@@ -1,0 +1,38 @@
+# We don't need node_modules because it is built from
+# the set of dependencies defined in package.json
+client/node_modules/**
+
+# We don't need the log directory, it is clearly local
+logs/*
+
+# Let's generally exclude the directories created by
+# virtualenv, except the one file I put in bin
+server/lib/**
+server/include/**
+server/bin/**
+server/man/**
+
+# Ignore SQL server directory contents
+mysql-data/**
+
+# We don't need to include code coverage data output
+# in the repository
+cover/**
+coverage/**
+.nyc_output/**
+.coverage
+.coverage.server
+.coverage.client
+
+# Ignore editor configuration
+client/.vscode
+server/.vscode
+
+# Ignore build / run artifacts
+web/js
+web/index.html
+server/src/api/__pycache__
+server/src/dm/__pycache__
+server/pip-selfcheck.json
+server/.Python
+

@@ -1,0 +1,145 @@
+# Test API for Connexion
+swagger: '2.0'
+#host: server:5000
+basePath: /v1
+schemes:
+  - http
+
+# Document metadata
+info:
+  version: "0.0.2"
+  title: Test API Spec
+
+# API Paths
+paths:
+  # This is a user creation endpoint.
+  /users:
+    post:
+      summary: Create a user
+      tags:
+        - Users
+      parameters:
+        - name: user
+          in: body
+          schema:
+            $ref: '#/definitions/User'
+      responses:
+        201:
+          description: User successfully added
+        500:
+          description: Unknown API server error
+  /users/{username}:
+    get:
+      summary: Get a single user by username
+      tags:
+        - Users
+      parameters:
+        - name: username
+          in: path
+          type: string
+          required: true
+          minLength: 4
+          maxLength: 32
+      responses:
+        200:
+          description: Returns a single user
+          schema:
+            $ref: '#/definitions/User'
+        404:
+          description: User does not exist
+      security:
+        - basic: []
+  # This is a login endpoint.
+  /login:
+    # This is an HTTP operation
+    get:
+      # Describes the post behavior of the login endpoint
+      summary:
+        Authenticate - get token and initial app data for user
+      tags:
+        - Authentication
+      description: |
+        Authenticates users to the application.
+        Required parameters include username and password.
+        Returns an authentication token
+      responses:
+        # Successful Response
+        200:
+          description: Successful response
+          schema:
+            type: object
+            title: AppHydration
+            properties:
+              token:
+                type: string
+        # Unsuccessful Login
+        404:
+          description: Invalid user or password
+        500:
+          description: Unknown API server error
+      security:
+        - basic: []
+  # API to shut down the server
+  /shutdown:
+    post:
+      description: |
+        Allows for clean server shutdown.
+      tags:
+        - Test Utilities
+      parameters:
+        - name: key
+          description: Unique application key to allow shutdown
+          in: body
+          schema:
+            type: string
+      responses:
+        200:
+          description: Server successfully shut down
+        404:
+          description: User not authorized to shut down server
+
+securityDefinitions:
+  basic:
+    type: basic
+
+definitions:
+  User:
+    type: object
+    required:
+      - username
+      - password
+      - email
+      - phone
+    properties:
+      user_id:
+        type: string
+        description: Unique Identifier
+        readOnly: true
+      username:
+        type: string
+        description: Login user name
+        minLength: 4
+        maxLength: 32
+      password:
+        type: string
+        description: User password
+        minLength: 8
+        maxLength: 32
+      email:
+        type: string
+        description: Email address
+        minLength: 4
+        maxLength: 80
+      phone:
+        type: string
+        description: Phone number
+        minLength: 10
+        maxLength: 20
+
+tags:
+  - name: Authentication
+    description: APIs associated with application authentication
+  - name: Users
+    description: APIs associated with CRUD for users
+  - name: Test Utilitities
+    description: APIs that should only be used by test utilities

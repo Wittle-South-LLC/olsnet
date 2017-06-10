@@ -1,0 +1,37 @@
+version: '2'
+services:
+  database:
+    image: "mysql:5.7.18"
+    command: [mysqld, --character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci]
+    expose:
+      - "3306"
+    volumes:
+      - /Users/eric/Development/Projects/olsnet/mysql-data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: onlyeric
+      MYSQL_DATABASE: test
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+    ports:
+      - "3306:3306"
+  server:
+    build:
+      context: ./server
+    expose:
+      - "5000"
+    volumes:
+      - ./server/src:/app
+      - ./openapi:/openapi
+    depends_on:
+      - database
+  web:
+    image: "rgoyard/apache-proxy:latest"
+    ports:
+      - "8080:80"
+    volumes:
+      - ./conf:/conf/
+      - ./web:/app/
+    links:
+      - server
+
