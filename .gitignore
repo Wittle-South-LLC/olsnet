@@ -14,6 +14,7 @@ server/man/**
 
 # Ignore SQL server directory contents
 mysql-data/**
+test/mysql-data/**
 
 # We don't need to include code coverage data output
 # in the repository
