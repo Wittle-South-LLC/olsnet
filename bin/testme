@@ -4,13 +4,13 @@
 rm -R test/mysql-data
 
 # Start the docker image for testing
-docker-compose -f docker-compose.yml -f docker-compose.test.yml -p testing up -d
+source bin/olsnet-test; docker-compose -p testing up -d
 
 sleep 10
 
 curl -H "Content-Type: application/json" -X POST -d '{"username": "testing", "password":"testing0", "email": "test@wittle.net", "phone": "9199999999"}' http://localhost:8081/api/v1/users
 
-curl -H "Content-Type: application/json" -u testing:testing0 -X GET http://localhost:8081/api/v1/users/eric
+curl -H "Content-Type: application/json" -u testing:testing0 -X GET http://localhost:8081/api/v1/users/testing
 
 # Test is complete, so stop the test docker image
-docker-compose -p testing stop
+source bin/olsnet-test; docker-compose -p testing stop
