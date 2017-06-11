@@ -2,19 +2,19 @@ version: '2.1'
 services:
   database:
     image: "mysql:5.7.18"
-    command: [mysqld, --character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci]
+    command: [mysqld, --character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci, --port=$MYSQL_CONTAINER_PORT]
     expose:
-      - "3306"
+      - "${MYSQL_CONTAINER_PORT}"
     volumes:
-      - ./mysql-data:/var/lib/mysql
+      - ${MYSQL_DATA}:/var/lib/mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: onlyeric
-      MYSQL_DATABASE: test
-      MYSQL_USER: test
-      MYSQL_PASSWORD: test
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE
+      - MYSQL_USER
+      - MYSQL_PASSWORD
     ports:
-      - "3306:3306"
+      - "${MYSQL_HOST_PORT}:${MYSQL_CONTAINER_PORT}"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 5s
@@ -22,8 +22,12 @@ services:
   server:
     build:
       context: ./server
+    environment:
+      - CONNECT_STRING
+      - SECRET_KEY
+      - APPSERVER_CONTAINER_PORT
     expose:
-      - "5000"
+      - "${APPSERVER_CONTAINER_PORT}"
     volumes:
       - ./server/src:/app
       - ./openapi:/openapi
@@ -31,12 +35,20 @@ services:
       database:
         condition: service_healthy
   web:
-    image: "rgoyard/apache-proxy:latest"
+    build:
+      context: ${WEBSERVER_CONTEXT_DIR}
     ports:
-      - "8080:80"
+      - "${WEBSERVER_HOST_PORT}:${WEBSERVER_CONTAINER_PORT}"
     volumes:
-      - ./conf:/conf/
       - ./web:/app/
     links:
       - server
-
+#  web:
+#    image: "rgoyard/apache-proxy:latest"
+#    ports:
+#      - "${WEBSERVER_HOST_PORT}:${WEBSERVER_CONTAINER_PORT}"
+#    volumes:
+#      - ${WEBSERVER_CONF}:/conf/
+#      - ./web:/app/
+#    links:
+#      - server

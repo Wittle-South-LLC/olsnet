@@ -6,7 +6,8 @@ ADD requirements.txt /
 RUN pip3 install -r /requirements.txt
 ADD /src /app
 WORKDIR /app
-ENV BASE_CONNECT_STRING="mysql+mysqldb://test:test@database/test?charset=utf8mb4"
-ENV BASE_SECRET_KEY="My Secret"
+ENV CONNECT_STRING="${CONNECT_STRING}"
+ENV SECRET_KEY="${SECRET_KEY}"
+ENV APPSERVER_CONTAINER_PORT="${APPSERVER_CONTAINER_PORT}"
 ENTRYPOINT ["python3"]
 CMD ["server.py"]

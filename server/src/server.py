@@ -29,11 +29,13 @@ LOGGER.setLevel(logging.DEBUG)
 FAPP.debug = True
 
 # Get the database connect string from the environment
-CONNECT_STRING = os.environ['BASE_CONNECT_STRING']
+CONNECT_STRING = os.environ['CONNECT_STRING']
 LOGGER.debug('Connect String = ' + CONNECT_STRING)
+APPSERVER_PORT = os.environ['APPSERVER_CONTAINER_PORT']
+LOGGER.debug('Running on port: ' + APPSERVER_PORT)
 
 # Get the secret key from the environment
-FAPP.config['SECRET_KEY'] = os.environ['BASE_SECRET_KEY']
+FAPP.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 
 # Create database connection and sessionmaker
 try:
@@ -94,4 +96,4 @@ def ping_connection(connection, branch):
         connection.should_close_with_result = save_should_close_with_result
 
 # Start the app
-APP.run(host='0.0.0.0', port=5000)
+APP.run(host='0.0.0.0', port=APPSERVER_PORT)

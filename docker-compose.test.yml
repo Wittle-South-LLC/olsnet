@@ -1,5 +1,0 @@
-version: '2.1'
-services:
-  database:
-    volumes:
-      - ./test/mysql-data:/var/lib/mysql

@@ -1,7 +1,7 @@
 # Test API for Connexion
 swagger: '2.0'
 #host: server:5000
-basePath: /v1
+basePath: /api/v1
 schemes:
   - http
 
