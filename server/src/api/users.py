@@ -20,7 +20,8 @@ def post(user):
     new_user.hash_password(user['password'])
     g.db_session.add(new_user)
     g.db_session.commit()
-    return 'User successfully added', 201
+#    return 'User successfully added', 201
+    return {'user_id': uuid.UUID(bytes=new_user.user_id)}, 201
 
 # We'll need a get, but I wonder what kind of object I need to pass to
 # a get method. Hopefully a SQLAchemy object will suffice

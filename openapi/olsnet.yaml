@@ -26,6 +26,12 @@ paths:
       responses:
         201:
           description: User successfully added
+          schema:
+            type: object
+            title: UserID
+            properties:
+              user_id:
+                type: string
         500:
           description: Unknown API server error
   /users/{username}:

@@ -14,7 +14,6 @@ AUTH = HTTPBasicAuth()
 def get():
     """Method to handle GET verb for /login enpoint"""
     token = g.user.generate_auth_token(current_app.config['SECRET_KEY'], 600)
-#   token = g.user.generate_auth_token(os.environ['BASE_SECRET_KEY'], 600)
     return {
         'token':token.decode('ascii')
     }, 200

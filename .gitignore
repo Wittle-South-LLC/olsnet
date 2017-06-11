@@ -37,3 +37,6 @@ server/src/dm/__pycache__
 server/pip-selfcheck.json
 server/.Python
 
+# Ignore test run artifacts
+test/server/__pycache__
+
