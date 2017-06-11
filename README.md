@@ -5,7 +5,7 @@ It implements a container-based web application that has persistence via a
 MySQL container, a RESTful API implemented as a Python service, and an HTML5
 UI implemented using React, React-Router, and Redux, assmebled with webpack.
 
-#Project Structure
+## Project Structure
 
 * **bin** - Contains scripts that are useful for the project as a whole
 * **client** - Contains the source for the HTML5 client app
@@ -19,7 +19,7 @@ UI implemented using React, React-Router, and Redux, assmebled with webpack.
 * **test** - Source for automated unit / integration tests
 * **web** - Home directory for the development web service
 
-#Docker Environment
+## Docker Environment
 
 This project is designed to support development via Docker, it uses
 docker-compose to create three containers; one database container, 

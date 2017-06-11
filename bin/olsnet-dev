@@ -25,7 +25,14 @@ export APPSERVER_HOST_PORT=5000
 #       leverages the environment variables so that this happens automatically
 export WEBSERVER_CONTAINER_PORT=80
 export WEBSERVER_HOST_PORT=8080
-export WEBSERVER_CONTEXT_DIR=./proxy
+# The following lines are because the environment variable substitution in 
+# the nginx command in docker-compose.yml will replace nginx configuration
+# values as well as what we legitimately want as build environment config
+# variables; so this is a hack to replace them
+export server_name='$server_name'
+export host='$host'
+export remote_addr='$remote_addr'
+export proxy_add_x_forwarded_for='$proxy_add_x_forwarded_for'
 
 # Database Usernames / Password (Make sure to update CONNECT_STRING if you change these)
 export MYSQL_ROOT_PASSWORD=onlyeric

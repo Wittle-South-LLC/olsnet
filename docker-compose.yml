@@ -1,5 +1,12 @@
+# Using version 2.1 so that we can get environment variable substitution,
+# which allows the same docker-compose.yml file to be used for test and
+# development configurations without modification. Note that as a result,
+# the scripts bin/olsnet-dev or bin/olsnet-test should be used to ensure
+# that all required environment variables are set before running
+# docker-compose up
 version: '2.1'
 services:
+  # Database service based entirely on stock mysql image.
   database:
     image: "mysql:5.7.18"
     command: [mysqld, --character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci, --port=$MYSQL_CONTAINER_PORT]
@@ -19,36 +26,49 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 5s
       retries: 10
+  # Server built on a existing dockerfile
+  # TODO: Replace the server dockerfile with just configuration
+  #       commands
   server:
     build:
+      # Set the working directory for this config to server
       context: ./server
+    # Pass through key server environment variables
     environment:
       - CONNECT_STRING
       - SECRET_KEY
       - APPSERVER_CONTAINER_PORT
+    # Allow tests to run directly against app server and not
+    # through proxy (not sure this will be needed)
     expose:
       - "${APPSERVER_CONTAINER_PORT}"
     volumes:
       - ./server/src:/app
       - ./openapi:/openapi
+    # Don't start this until the database service is started
     depends_on:
       database:
         condition: service_healthy
   web:
-    build:
-      context: ${WEBSERVER_CONTEXT_DIR}
+    # Build the web and proxy server from a stock image
+    image: nginx
+    volumes:
+      - ./proxy/nginx.template:/etc/nginx/nginx.template
+      - ./web:/app
     ports:
       - "${WEBSERVER_HOST_PORT}:${WEBSERVER_CONTAINER_PORT}"
-    volumes:
-      - ./web:/app/
+    # Pass through a set of environment variables that should
+    # already be set
+    environment:
+      - WEBSERVER_CONTAINER_PORT
+      - APPSERVER_CONTAINER_PORT
+      - remote_addr
+      - proxy_add_x_forwarded_for
+      - server_name
+      - host
+    # Build the nginix configuration file from a template; allows us
+    # to set the webserver port and the app server port by environment vars
+    command: /bin/bash -c "envsubst < /etc/nginx/nginx.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
+    # Ensure the server is up first
     links:
       - server
-#  web:
-#    image: "rgoyard/apache-proxy:latest"
-#    ports:
-#      - "${WEBSERVER_HOST_PORT}:${WEBSERVER_CONTAINER_PORT}"
-#    volumes:
-#      - ${WEBSERVER_CONF}:/conf/
-#      - ./web:/app/
-#    links:
-#      - server

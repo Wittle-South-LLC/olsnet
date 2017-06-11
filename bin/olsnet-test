@@ -14,18 +14,21 @@ export MYSQL_DATA=./test/mysql-data
 
 # Application Server Service - container port number must match the
 # listen port in the appropriate nginx.conf file (either proxy or test/proxy)
-# TODO: Take the time to generate the nginx.conf and docker files in a way that
-#       leverages the environment variables so that this happens automatically
 export APPSERVER_CONTAINER_PORT=5001
 export APPSERVER_HOST_PORT=5001
 
 # Web Server Service - Note that the container port specified here
 # must match the port set in the nginx.conf files in /proxy and /test/proxy
-# TODO: Take the time to generate the nginx.conf and docker files in a way that
-#       leverages the environment variables so that this happens automatically
 export WEBSERVER_CONTAINER_PORT=8082
 export WEBSERVER_HOST_PORT=8081
-export WEBSERVER_CONTEXT_DIR=./test/proxy
+# The following lines are because the environment variable substitution in 
+# the nginx command in docker-compose.yml will replace nginx configuration
+# values as well as what we legitimately want as build environment config
+# variables; so this is a hack to replace them
+export server_name='$server_name'
+export host='$host'
+export remote_addr='$remote_addr'
+export proxy_add_x_forwarded_for='$proxy_add_x_forwarded_for'
 
 # Database Usernames / Password (Make sure to update CONNECT_STRING if you change these)
 export MYSQL_ROOT_PASSWORD=onlyeric

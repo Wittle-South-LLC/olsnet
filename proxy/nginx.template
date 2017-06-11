@@ -1,5 +1,5 @@
-worker_processes 1;
- 
+worker_processes    1;
+
 events { worker_connections 1024; }
  
 http {
@@ -7,11 +7,11 @@ http {
     sendfile on;
  
     upstream docker-server {
-        server server:5001;
+        server server:${APPSERVER_CONTAINER_PORT};
     }
  
     server {
-        listen 8082;
+        listen ${WEBSERVER_CONTAINER_PORT};
  
         location /api {
             proxy_pass         http://docker-server;
