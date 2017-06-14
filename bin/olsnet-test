@@ -47,3 +47,15 @@ export CONNECT_STRING="mysql+mysqldb://test:test@database:3406/test?charset=utf8
 #  binascii.hexlify(os.urandom(24))
 #  quit()
 export SECRET_KEY=b'4f83ec75d85ae860ac95eada4d7995b3eadb68a9ff52fcd9'
+
+# Set up coverage file environment variable
+export COVERAGE_FILE=/coverage/.coverage.server
+
+# Define the path to the openapi spec - must be absolute
+export OPENAPI_SPEC="/openapi/olsnet.yaml"
+
+# Note (Important!) that this environment variable is overridden in bin/testme
+# So if you're debugging behavior of the testme script, look there for
+# conditional logic for how this is set. Left here for compatibility with
+# olsnet-dev script, and to allow testing outside of the testme script
+export SERVER_COMMAND="python3 /app/server.py"

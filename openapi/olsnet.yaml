@@ -97,7 +97,11 @@ paths:
           description: Unique application key to allow shutdown
           in: body
           schema:
-            type: string
+            type: object
+            title: ShutdownKey
+            properties:
+              key:
+                type: string
       responses:
         200:
           description: Server successfully shut down

@@ -58,13 +58,16 @@ if [ "$run_nose" -gt "0" ] || [ "$run_mocha" -gt "0" ] || [ "$run_coverage" -gt 
   if [ "$run_coverage" -eq "0" ]; then
 #    eval "server/bin/python -m flask run --port=$PORT --host=$HOST > logs/testme.log 2>&1" &
     # Start the docker image for testing
-    docker-compose -p testing up -d
     # Sleep for 5 seconds to ensure that all of the containers are up
     # TODO: more elegant approach to ensure that all servers are up
-    sleep 5
+    SERVER_COMMAND="python3 /app/server.py"
   else
-    eval "COVERAGE_FILE=.coverage.server coverage run --source server/src,server/src/DataModel,server/src/APIs -m flask run --port=$PORT --host=$HOST > logs/testme.log 2>&1" &
+#    SERVER_COMMAND="coverage run --source /app,/app/dm,/app/api /app/server.py"
+    SERVER_COMMAND="/app/test_script"
   fi
+  echo "About to execute compose with $SERVER_COMMAND with coverage in $COVERAGE_FILE"
+  docker-compose -p testing up -d --build
+  sleep 5
   server_running=1
 fi
 
@@ -73,14 +76,13 @@ if [ "$server_running" -gt "0" ]; then
   curl -H "Content-Type: application/json" -X POST -d '{"username": "testing", "password":"testing0", "email": "test@wittle.net", "phone": "9199999999"}' http://localhost:8081/api/v1/users
 fi
 
-
 # If we are running nose tests, then do it
 if [ "$run_nose" -gt "0" ] && [ "$server_running" -gt "0" ]; then
-  if [ "$run_coverage" -eq "0" ]; then
-    eval "server/bin/nosetests --verbosity=$nose_verbosity $nose_args"
-  else
-    eval "COVERAGE_FILE=.coverage.client coverage run --source server/src,server/src/DataModel,server/src/APIs server/bin/nosetests --verbosity=$nose_verbosity $nose_args"
-  fi
+#  if [ "$run_coverage" -eq "0" ]; then
+  eval "server/bin/nosetests --verbosity=$nose_verbosity $nose_args"
+#  else
+#    eval "COVERAGE_FILE=./coverage/.coverage.client coverage run --source server/src,server/src/dm,server/src/api server/bin/nosetests --verbosity=$nose_verbosity $nose_args"
+#  fi
   nose_result=$?
 fi
 
@@ -97,11 +99,11 @@ fi
 # If we started the server, send the command to shut down the api server
 if [ "$server_running" -gt "0" ]; then
   # Test is complete, so stop the test docker image
+  echo "about to post shutdown to ${WEBSERVER_HOST_PORT}"
+  curl -H "Content-type: application/json" -X POST -d '{"key":"Eric"}' http://localhost:${WEBSERVER_HOST_PORT}/api/v1/shutdown
+  sleep 3
   docker-compose -p testing stop
 fi
-
-#Left over from original testme that validated docker startup / stop
-#curl -H "Content-Type: application/json" -u testing:testing0 -X GET http://localhost:8081/api/v1/users/testing
 
 my_exit=0
 if [ "$nose_result" -eq "0" ] && [ "$mocha_result" -eq "0" ]; then
@@ -109,8 +111,11 @@ if [ "$nose_result" -eq "0" ] && [ "$mocha_result" -eq "0" ]; then
     if [ "$run_mocha" -gt "0" ]; then
       eval "cd .."
     fi
-    eval "coverage combine"
-    eval "coverage report -m --skip-covered"
+    cd coverage
+#    coverage combine
+#    coverage report -m --skip-covered
+    cat coverage.report
+    cd ..
   fi
   echo "All tests successful!"
 else

@@ -51,3 +51,9 @@ export CONNECT_STRING="mysql+mysqldb://dev:dev@database/dev?charset=utf8mb4"
 #  binascii.hexlify(os.urandom(24))
 #  quit()
 export SECRET_KEY=b'e9ea84dff2ebb679e9acec233938309d87ba278d5eb52ad0'
+
+# Define the path to the openapi spec - must be absolute
+export OPENAPI_SPEC="/openapi/olsnet.yaml"
+
+# Set up server command
+export SERVER_COMMAND="python3 /app/server.py"

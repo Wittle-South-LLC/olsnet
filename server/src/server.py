@@ -11,6 +11,10 @@ from dm.User import User
 
 # Define constants
 API_REQUIRES_JSON = 'All PUT/POST API requests require JSON, and this request did not'
+OTHER_PRECHECK_401 = 'Other 401 response'
+
+# Get the spec file from the environment variable
+OPENAPI_SPEC = os.environ['OPENAPI_SPEC']
 
 # Create the connextion-based Flask app, and tell it where to look for API specs
 APP = connexion.FlaskApp(__name__, specification_dir='swagger/', swagger_json=True)
@@ -19,7 +23,7 @@ FAPP = APP.app
 # Add our specific API spec, and tell it to use the Resty resolver to find the
 # specific python module to handle the API call by navigating the source tree
 # according to the API structure. All API modules are in the "api" directory
-APP.add_api('/openapi/olsnet.yaml', resolver=RestyResolver('api'))
+APP.add_api(OPENAPI_SPEC, resolver=RestyResolver('api'))
 
 # Get a reference to the logger for the app
 LOGGER = FAPP.logger
@@ -64,7 +68,7 @@ def before_request():
         if request.path != '/fb_login':
             abort(400, API_REQUIRES_JSON)
         else:
-            abort(401)
+            abort(401, OTHER_PRECHECK_401)
 
 @FAPP.after_request
 def after_request(func):

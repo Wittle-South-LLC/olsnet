@@ -38,6 +38,9 @@ services:
       - CONNECT_STRING
       - SECRET_KEY
       - APPSERVER_CONTAINER_PORT
+      - OPENAPI_SPEC
+      - SERVER_COMMAND
+      - COVERAGE_FILE
     # Allow tests to run directly against app server and not
     # through proxy (not sure this will be needed)
     expose:
@@ -45,6 +48,7 @@ services:
     volumes:
       - ./server/src:/app
       - ./openapi:/openapi
+      - ./coverage:/coverage
     # Don't start this until the database service is started
     depends_on:
       database:

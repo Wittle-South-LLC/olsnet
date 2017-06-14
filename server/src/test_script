@@ -1,0 +1,15 @@
+#!/bin/bash
+echo "Listing contents of /coverage"
+ls -al /coverage
+echo "Listing contents of /app"
+ls -al /app
+echo "Printing working directory"
+pwd
+echo "Launching coverage run of server"
+coverage run --source /app,/app/dm,/app/api /app/server.py
+echo "Listing contents of /coverage"
+ls -al /coverage
+cd /coverage
+echo "About to run coverage report"
+coverage report -m --skip-covered > coverage.report
+
