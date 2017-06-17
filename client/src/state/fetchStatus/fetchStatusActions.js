@@ -1,5 +1,6 @@
 /* fetchStatusActions.js - fetch status actions */
 import fetch from 'isomorphic-fetch'
+import { defineMessages } from 'react-intl'
 
 export const PRE_FETCH = 'PRE_FETCH'
 export const FETCH_START = 'FETCH_START'
@@ -7,11 +8,6 @@ export const FETCH_SUCCESS = 'FETCH_SUCCESS'
 export const FETCH_ERROR = 'FETCH_ERROR'
 export const SET_MESSAGE = 'SET_MESSAGE'
 export const TRANSITION_TO = 'TRANSITION_TO'
-
-// export const MSG_INVALID_CREDENTIALS = 'INVALID_CREDENTIALS'
-// export const MSG_UNKNOWN_SERVER_ERROR = 'UNKNOWN_SERVER_ERROR'
-// export const MSG_OTHER_FETCH_ERROR = 'OTHER_FETCH_ERROR = '
-import { defineMessages } from 'react-intl'
 
 export const componentText = defineMessages({
   invalidCredentials: { id: 'fetchStatus.InvalidCredentials', defaultMessage: 'Invalid Credentials - please log in with a valid username and password' },
@@ -108,8 +104,8 @@ function fetchSuccess (type, sendData, receivedData, nextPath) {
 /* Construct an HTTP basic authentication header given a username and password */
 function getAuthstring (username, password) {
   return 'Basic ' +
-    new Buffer(unescape(encodeURIComponent(username)) + ':' +
-               unescape(encodeURIComponent(password))).toString('base64')
+    Buffer.alloc(unescape(encodeURIComponent(username)) + ':' +
+                 unescape(encodeURIComponent(password))).toString('base64')
 }
 
 /* Construct the payload argument to fetch given the HTTP method,
@@ -128,7 +124,7 @@ function getApiHeaders (httpMethod, username, password, body = undefined) {
   return result
 }
 
-export function handleDoubleClick(nextPath) {
+export function handleDoubleClick (dispatch, nextPath) {
   if (nextPath) {
     return dispatch(setNewPath(nextPath))
   } else {

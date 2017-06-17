@@ -1,5 +1,5 @@
 /* userActions.js - User actions */
-import { fetchReduxAction, setNewPath } from '../fetchStatus/fetchStatusActions'
+import { fetchReduxAction, handleDoubleClick } from '../fetchStatus/fetchStatusActions'
 
 export const LOGIN_USER = 'LOGIN_USER'
 export const REGISTER_USER = 'REGISTER_USER'
@@ -17,7 +17,7 @@ export function loginUser (username, password, nextPath = undefined) {
         sendData: { username }
       }
       return dispatch(fetchReduxAction(payload, username, password, nextPath))
-    } else return handleDoubleClick(nextPath)
+    } else return handleDoubleClick(dispatch, nextPath)
   }
 }
 
@@ -31,7 +31,7 @@ export function registerUser (username, password, email, reCaptchaResponse, next
         sendData: { username, password, email, reCaptchaResponse }
       }
       return dispatch(fetchReduxAction(payload, username, password, nextPath))
-    } else return handleDoubleClick(nextPath)
+    } else return handleDoubleClick(dispatch, nextPath)
   }
 }
 
@@ -49,6 +49,6 @@ export function listUsers (username, password, nextPath = undefined) {
         type: LIST_USERS
       }
       return dispatch(fetchReduxAction(payload, username, password, nextPath))
-    } else return handleDoubleClick(nextPath)
+    } else return handleDoubleClick(dispatch, nextPath)
   }
 }

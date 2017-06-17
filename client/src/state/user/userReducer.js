@@ -1,3 +1,8 @@
+// userReducer.js
+// Note that no-fallthough is turned off for switch statments on action.status
+// because of an obsession with code coverage metrics. The default return line
+// cannot be reached without un-necessary test cases that would have to be
+// written for each individual action in the state machine
 import { Map, fromJS } from 'immutable'
 import { LIST_USERS, LOGIN_USER, LOGOUT_USER, REGISTER_USER } from './userActions'
 import { FETCH_START, FETCH_ERROR, FETCH_SUCCESS } from '../fetchStatus/fetchStatusActions'
@@ -46,25 +51,22 @@ export function user (state = Map({
                       .set('phone', action.receivedData.phone)
                       .set('user_id', action.receivedData.user_id)
                       .set('preferences', fromJS(action.receivedData.preferences))
-//        default: return state
       }
-    case REGISTER_USER:
+    case REGISTER_USER:  // eslint-disable-line no-fallthrough
       switch (action.status) {
         case FETCH_START: return state.set('creatingUser', true)
         case FETCH_ERROR: return state.delete('creatingUser')
         case FETCH_SUCCESS:
           return state.delete('creatingUser')
-//        default: return state
       }
-    case LIST_USERS:
+    case LIST_USERS:  // eslint-disable-line no-fallthrough
       switch (action.status) {
         case FETCH_START: return state.set('list', undefined)
         case FETCH_ERROR: return state.delete('list')
         case FETCH_SUCCESS:
           return state.set('list', fromJS(action.receivedData))
-//        default: return state
       }
-    case LOGOUT_USER:
+    case LOGOUT_USER:  // eslint-disable-line no-fallthrough
       return state.delete('list')
                   .set('username', undefined)
                   .set('token', undefined)
