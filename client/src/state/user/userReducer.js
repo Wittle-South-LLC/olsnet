@@ -46,11 +46,7 @@ export function user (state = Map({
         case FETCH_START: return state.set('fetchingUser', true).set('username', action.sendData.username)
         case FETCH_ERROR: return state.delete('fetchingUser').set('username', undefined)
         case FETCH_SUCCESS:
-          return state.delete('fetchingUser').set('token', action.receivedData.token)
-                      .set('email', action.receivedData.email)
-                      .set('phone', action.receivedData.phone)
-                      .set('user_id', action.receivedData.user_id)
-                      .set('preferences', fromJS(action.receivedData.preferences))
+          return fromJS(action.receivedData)
       }
     case REGISTER_USER:  // eslint-disable-line no-fallthrough
       switch (action.status) {

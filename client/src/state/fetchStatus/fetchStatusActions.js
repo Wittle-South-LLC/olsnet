@@ -104,8 +104,8 @@ function fetchSuccess (type, sendData, receivedData, nextPath) {
 /* Construct an HTTP basic authentication header given a username and password */
 function getAuthstring (username, password) {
   return 'Basic ' +
-    Buffer.alloc(unescape(encodeURIComponent(username)) + ':' +
-                 unescape(encodeURIComponent(password))).toString('base64')
+    Buffer.from(unescape(encodeURIComponent(username)) + ':' +
+                 unescape(encodeURIComponent(password)), 'utf8').toString('base64')
 }
 
 /* Construct the payload argument to fetch given the HTTP method,
