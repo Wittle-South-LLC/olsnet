@@ -11,17 +11,17 @@ server/lib/**
 server/include/**
 server/bin/**
 server/man/**
+server/coverage/**
 
 # Ignore SQL server directory contents
-mysql-data/**
-test/mysql-data/**
+mysql-data-dev/**
+mysql-data-test/**
 
 # We don't need to include code coverage data output
 # in the repository
-cover/**
 coverage/**
-.nyc_output/**
-.coverage
+client/.nyc_output/**
+client/coverage/**
 .coverage.server
 .coverage.client
 
@@ -39,5 +39,7 @@ server/pip-selfcheck.json
 server/.Python
 
 # Ignore test run artifacts
-test/server/__pycache__
+server/tests/__pycache__
 
+# OS X Artifacts
+.DS_Store

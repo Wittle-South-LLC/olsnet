@@ -10,7 +10,7 @@
 # MySQL Service
 export MYSQL_CONTAINER_PORT=3406
 export MYSQL_HOST_PORT=3406
-export MYSQL_DATA=./test/mysql-data
+export MYSQL_DATA=./mysql-data-test
 
 # Application Server Service - container port number must match the
 # listen port in the appropriate nginx.conf file (either proxy or test/proxy)

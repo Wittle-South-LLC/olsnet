@@ -40,7 +40,7 @@ def test_user_add_api_success():
         'username': "talw",
         'password': "testing1",
         'email': "tal@wittle.net",
-        'phone': '9194753336',
+        'phone': '9194753337',
         'reCaptchaResponse': 'Dummy',
         'preferences': {'color': 'red'}
     }
@@ -52,8 +52,8 @@ def test_user_add_api_success():
     assert json['user_id']
     added_id = json['user_id']
 
-def test_get_token():
-    """--> Test get a user token"""
+def test_login():
+    """--> Test user login"""
     #pylint: disable=W0603
     global token
     resp = get_response_with_auth('GET', BASE_URL + '/login')
@@ -61,20 +61,40 @@ def test_get_token():
         LOGGER.debug('Response text = %s', resp.text)
     json = resp.json()
     assert json['token']
+    assert json['email'] == 'test@wittle.net'
+    assert json['phone'] == '9199999999'
+    assert json['user_id']
+    assert json['username'] == 'testing'
+    assert 'preferences' in json
     token = json['token']
 
-def test_get_user_with_token():
-    """--> Test get user information by authenticating with a token"""
-    url = BASE_URL + '/users/talw'
-    LOGGER.debug('Attempting to authenticate with %s', token)
-    resp = requests.get(url, auth=HTTPBasicAuth(token, 'x'))
-    if resp.status_code >= 400:
-        LOGGER.debug('Response text = %s', resp.text)
+def test_user_list_with_token():
+    """--> Test list users"""
+    resp = requests.get(BASE_URL + '/users', auth=HTTPBasicAuth(token, 'x'))
+#    resp = get_response_with_auth('GET', BASE_URL + '/users')
     assert resp.status_code == 200
+    json = resp.json()
+    assert len(json) > 1
+    assert json[0]['username'] == 'talw'
+    assert json[1]['username'] == 'testing'
 
-def test_get_user_with_old_token():
-    """--> Test get user information by authenticating with an old token"""
-    url = BASE_URL + '/users/talw'
+#def test_get_user_with_token():
+#    """--> Test get user information by authenticating with a token"""
+#    url = BASE_URL + '/users/talw'
+#    LOGGER.debug('Attempting to authenticate with %s', token)
+#    resp = requests.get(url, auth=HTTPBasicAuth(token, 'x'))
+#    if resp.status_code >= 400:
+#        LOGGER.debug('Response text = %s', resp.text)
+#    assert resp.status_code == 200
+ #   json = resp.json()
+ #   assert json['email'] == 'tal@wittle.net'
+ #   assert json['phone'] == '9194753337'
+ #   LOGGER.debug('JSON = %s', str(json))
+ #   assert json['preferences']['color'] == 'red'
+
+def test_get_user_list_with_old_token():
+    """--> Test get user list by authenticating with an old token"""
+    url = BASE_URL + '/users'
     resp = requests.get(url, auth=HTTPBasicAuth('c056c7d1-5366-4ee4-a27d-8c6356e9ebe2', 'x'))
     LOGGER.debug('Return code: ' + str(resp.status_code))
     assert resp.status_code == 401 or resp.status_code == 404
@@ -97,3 +117,7 @@ def test_add_duplicate_user():
     resp = get_response_with_auth('POST', BASE_URL + '/users', user_json)
     assert resp.status_code == 400
 
+def test_delete_user():
+    """--> Test deleting a user"""
+    resp = get_response_with_auth('DELETE', BASE_URL + '/users/talw')
+    assert resp.status_code == 204

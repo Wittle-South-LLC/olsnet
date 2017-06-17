@@ -14,9 +14,11 @@ AUTH = HTTPBasicAuth()
 def search():
     """Method to do something, but I don't know what"""
     token = g.user.generate_auth_token(current_app.config['SECRET_KEY'], 600)
-    return {
-        'token':token.decode('ascii')
-    }, 200
+    # Dump the attributes of the current logged in user as a dict
+    ret = g.user.dump()
+    # Add the token just created to the user dict and return it
+    ret['token'] = token.decode('ascii')
+    return ret, 200
 
 # Helper method to verify tokens
 def verify_auth_token(token, secret_key):

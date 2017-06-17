@@ -48,7 +48,7 @@ services:
     volumes:
       - ./server/src:/app
       - ./openapi:/openapi
-      - ./coverage:/coverage
+      - ./server/coverage:/coverage
     # Don't start this until the database service is started
     depends_on:
       database:

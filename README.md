@@ -8,15 +8,12 @@ UI implemented using React, React-Router, and Redux, assmebled with webpack.
 ## Project Structure
 
 * **bin** - Contains scripts that are useful for the project as a whole
-* **client** - Contains the source for the HTML5 client app
-* **cover** - Code coverage from automated tests
-* **coverage** - Code coverage from automated tests (one of these needs to go)
+* **client** - Contains the source for the HTML5 client app and tests
 * **logs** - Consolidated logs from the server
 * **mysql-data** - Persistent data volume for development instance of mysql
 * **openapi** - API documentation for the RESTful API
 * **proxy** - Contains configuration files for the web proxy service
-* **server** - Source for the server. This is a virtualenv directory
-* **test** - Source for automated unit / integration tests
+* **server** - Source for the server, including tests. This is a virtualenv directory
 * **web** - Home directory for the development web service
 
 ## Docker Environment

@@ -22,7 +22,7 @@ paths:
         - name: user
           in: body
           schema:
-            $ref: '#/definitions/User'
+            $ref: '#/definitions/createUser'
       responses:
         201:
           description: User successfully added
@@ -34,9 +34,43 @@ paths:
                 type: string
         500:
           description: Unknown API server error
-  /users/{username}:
     get:
-      summary: Get a single user by username
+      summary: Get a list of users
+      tags:
+        - Users
+      responses:
+        200:
+          description: List of users found
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+        500:
+          description: Unknown API server error
+  /users/{username}:
+#    Removed 6/17/17 - no use case for individual user get
+#    get:
+#      summary: Get a single user by username
+#      tags:
+#        - Users
+#      parameters:
+#        - name: username
+#          in: path
+#          type: string
+#          required: true
+#          minLength: 4
+#          maxLength: 32
+#      responses:
+#        200:
+#          description: Returns a single user
+#          schema:
+#            $ref: '#/definitions/loginUser'
+#        404:
+#          description: User does not exist
+#      security:
+#        - basic: []
+    delete:
+      summary: Delete a user by username
       tags:
         - Users
       parameters:
@@ -47,12 +81,10 @@ paths:
           minLength: 4
           maxLength: 32
       responses:
-        200:
-          description: Returns a single user
-          schema:
-            $ref: '#/definitions/User'
+        204:
+          description: User deleted successfully
         404:
-          description: User does not exist
+          description: User not found
       security:
         - basic: []
   # This is a login endpoint.
@@ -73,11 +105,7 @@ paths:
         200:
           description: Successful response
           schema:
-            type: object
-            title: AppHydration
-            properties:
-              token:
-                type: string
+            $ref: '#/definitions/loginUser'
         # Unsuccessful Login
         404:
           description: Invalid user or password
@@ -117,7 +145,6 @@ definitions:
     type: object
     required:
       - username
-      - password
       - email
       - phone
     properties:
@@ -130,11 +157,6 @@ definitions:
         description: Login user name
         minLength: 4
         maxLength: 32
-      password:
-        type: string
-        description: User password
-        minLength: 8
-        maxLength: 32
       email:
         type: string
         description: Email address
@@ -145,6 +167,35 @@ definitions:
         description: Phone number
         minLength: 10
         maxLength: 20
+      preferences:
+        description: User Preferences
+        type: object
+  createUser:
+    allOf:
+      - $ref: '#/definitions/User'
+      - type: object
+        required:
+          - password
+          - reCaptchaResponse
+        properties:
+          password:
+            type: string
+            description: User password
+            minLength: 8
+            maxLength: 32
+          reCaptchaResponse:
+            type: string
+            description: ReCaptcha Token for validation
+            minLength: 4
+            maxLength: 32
+  loginUser:
+    allOf:
+      - $ref: '#/definitions/User'
+      - type: object
+        properties:
+          token:
+            type: string
+            description: Access token with expiration date
 
 tags:
   - name: Authentication
