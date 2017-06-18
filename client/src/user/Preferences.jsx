@@ -18,6 +18,6 @@ export default class Preferences extends React.Component {
   }
 }
 
-User.contextTypes = {
+Preferences.contextTypes = {
   intl: intlShape
 }
