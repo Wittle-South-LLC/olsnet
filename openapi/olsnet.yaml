@@ -187,7 +187,7 @@ definitions:
             type: string
             description: ReCaptcha Token for validation
             minLength: 4
-            maxLength: 32
+            maxLength: 400
   loginUser:
     allOf:
       - $ref: '#/definitions/User'

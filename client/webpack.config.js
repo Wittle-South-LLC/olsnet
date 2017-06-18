@@ -10,22 +10,16 @@ var BUILD_DIR = path.resolve(__dirname, '../web')
 // Should resolve to the src subdirectory of the working directory
 var APP_DIR = path.resolve(__dirname, 'src')
 
-// This regular expression defines how to split the application into
-// chunks. It currently looks for components that are routes (.jsx files
-// in /routes directories. It should not be changed without changing how
-// dynmaic loading of chunks works within index.jsx.
-var routeComponentRegex = /routes\/([^/]+\/?[^/]+).jsx/
+process.traceDeprecation = true
 
 var config = {
-  // Tells webpack to generate a source map for debugging. Could be hidden
-  // behind a production switch, as the source map is not needed for
-  // production
-  devtool: 'source-map',
-  // Root of the dependency try, key of the object will be the root of
-  // thie filename of the main chunk
+  // Root of the dependency tree, also known as the entry point for the
+  // application. It is where webpack will start to find all dependencies
   entry: {
     'main': APP_DIR + '/index.jsx'
   },
+  // Tell webpack about where the output should be, and how it should be
+  // named
   output: {
     path: BUILD_DIR,
     // Filename template applies to all chunks, including vendor. Path is
@@ -36,16 +30,24 @@ var config = {
     // assist the browswer with understanding what it can cache. Right now that
     // is a potential future optimization, given how long it took to get this
     // configuration working.
-    chunkFilename: 'js/[id].chunk.js',
+    chunkFilename: 'js/[id].chunk.js'
   },
+  // Resolve section helps webpack find code. My specific entries allow
+  // import statements to skip including the file extensions.
+  // Allows import statements to omit file suffixes for both js and .jsx files
+  // There is currently no modules section, because it doesn't appear to be
+  // needed
+  resolve: {
+    extensions: ['.js', '.jsx']
+  },
+  // Tells webpack to generate a source map for debugging. Could be hidden
+  // behind a production switch, as the source map is not needed for
+  // production
+  devtool: 'source-map',
   // Setting for webpack-dev-server to make the browserHistory component of
   // react-router to work
   devServer: {
     historyApiFallback: true
-  },
-  // Allows import statements to omit file suffixes for both js and .jsx files
-  resolve: {
-    extensions: ['.js', '.jsx']
   },
   plugins: [
     // Reads NODE_ENV from the environment where webpack is invoked, and replaces
@@ -55,13 +57,7 @@ var config = {
       'process.env': {
         // During build replace process.env.NODE_ENV with contents of NODE_ENV
         // environment variable present when webpack was run
-        'NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-        // During build replace process.env.URL_ROOT with contents of URL_ROOT
-        // environment variable present when webpack was run
-        'URL_ROOT': JSON.stringify(process.env.URL_ROOT),
-        // During build replace process.env.API_ROOT with contents of API_ROOT
-        // environment variable present when webpack was run
-        'API_ROOT': JSON.stringify(process.env.API_ROOT)
+        'NODE_ENV': JSON.stringify(process.env.NODE_ENV)
       }
     }),
     // Will auto-inject application version number from package.json, but
@@ -101,46 +97,25 @@ var config = {
         test: /\.jsx$/,
         include: APP_DIR,
         loader: 'babel-loader',
-        exclude: routeComponentRegex,
         query: {
-//          cacheDirectory: true,
+          cacheDirectory: true,
           presets: ['react', 'es2015'],
           env: {
             development: {
               plugins: [
                 ['react-intl', {
-                  messagesDir: './docroot/messages/'
+                  'messagesDir': './messages/'
                 }]
               ]
             }
           }
         }
       },
-      // Loader specification for JSX files that are named routes
-      // Note that this applies the lazy bundle loader first
-      // Note that this includes the required babel presets for react
-      // and ES6 / ES2015, so a .babel_preset file is not required
-      {
-        test: routeComponentRegex,
-        include: APP_DIR,
-//        loaders: ['bundle-loader?lazy', 'babel-loader?presets[]=react,presets[]=es2015']
-        loaders: ['bundle-loader?lazy', 'babel-loader?' + JSON.stringify({
-          presets: ['react', 'es2015'],
-          env: {
-            development: {
-              plugins: [
-                ['react-intl', { messagesDir: './docroot/messages' }]
-              ]
-            }
-          }
-        })]
-      },
       // Loader specification for .js files, assumes they are ES6 / ES2015
       {
         test: /\.js$/,
         include: APP_DIR,
         loader: 'babel-loader',
-        exclude: routeComponentRegex,
         query: {
           presets: ['es2015']
         }

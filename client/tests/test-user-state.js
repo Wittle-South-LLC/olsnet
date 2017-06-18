@@ -89,49 +89,49 @@ describe('user: testing reducing of asynchronous actions', () => {
       phone: '9999',
       email: 'test@wittle.net'
     }
-    nock(process.env.API_ROOT).get('/login').reply(200, receivedData)
+    nock(process.env.TEST_URL).get('/login').reply(200, receivedData)
     testAsync(store, stateLoginStart, stateLoginSuccess, done)
     store.dispatch(loginUser('testing', 'testing'))
   })
   it('handles loginUser with an unsuccessful response', (done) => {
     let store = createStore(testUserState, initialState, applyMiddleware(thunkMiddleware))
-    nock(process.env.API_ROOT).get('/login').reply(401)
+    nock(process.env.TEST_URL).get('/login').reply(401)
     testAsync(store, stateLoginStart, stateLoginFailed, done)
     store.dispatch(loginUser('testing', 'invalid password'))
   })
   it('handles listUsers with a successful response', (done) => {
     let store = createStore(testUserState, stateLoginSuccess, applyMiddleware(thunkMiddleware))
-    nock(process.env.API_ROOT).get('/users').reply(200, userList)
+    nock(process.env.TEST_URL).get('/users').reply(200, userList)
     testAsync(store, stateListUsersStart, stateUsersListed, done)
     store.dispatch(listUsers('testing', 'testing'))
   })
   it('handles listUsers with an unsuccessful response', (done) => {
     let store = createStore(testUserState, stateLoginSuccess, applyMiddleware(thunkMiddleware))
-    nock(process.env.API_ROOT).get('/users').reply(401)
+    nock(process.env.TEST_URL).get('/users').reply(401)
     testAsync(store, stateListUsersStart, stateListUsersFailed, done)
     store.dispatch(listUsers('testing', 'invalid password'))
   })
   it('handles registerUser with a successful response and next path', (done) => {
     let store = createStore(testUserState, initialState, applyMiddleware(thunkMiddleware))
     const receivedData = {id: 100}
-    nock(process.env.API_ROOT).post('/users').reply(200, receivedData)
+    nock(process.env.TEST_URL).post('/users').reply(200, receivedData)
     testAsync(store, stateRegisterStart, stateRegisterSuccess, done)
-    store.dispatch(registerUser('testing2', 'testing2', 'email', 'recaptchaResponse', '/cover'))
+    store.dispatch(registerUser('testing2', 'testing2', 'email', '9199291199', 'recaptchaResponse', '/cover'))
   })
   it('handles registerUser with an unsuccessful response', (done) => {
     let store = createStore(testUserState, initialState, applyMiddleware(thunkMiddleware))
-    nock(process.env.API_ROOT).post('/users').reply(400)
+    nock(process.env.TEST_URL).post('/users').reply(400)
     testAsync(store, stateRegisterStart, stateRegisterFailed, done)
     store.dispatch(registerUser('testing2', '', 'email'))
   })
 })
 
-if (process.env.INTEGRATION_TESTS == 'Yes') {
-  let add_user = JSON.parse(process.env.ADD_USER)
+if (process.env.INTEGRATION_TESTS === 'Yes') {
+  let addUser = JSON.parse(process.env.ADD_USER)
   const listUsersStart = initialState.setIn(['user', 'list'], undefined)
                                      .setIn(['fetchStatus', 'fetching'], true)
   const listUsersSuccess = initialState.setIn(['user', 'list'], fromJS([
-    {username: 'testing', user_id: add_user.user_id, preferences: null, phone: '9199999999', email: 'test@wittle.net'}
+    {username: 'testing', user_id: addUser.user_id, preferences: null, phone: '9199999999', email: 'test@wittle.net'}
   ]))
   describe('user: live aychronous tests against the test server', () => {
     it('handles loginUser with a successful response', (done) => {

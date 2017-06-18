@@ -29,6 +29,7 @@ export server_name='$server_name'
 export host='$host'
 export remote_addr='$remote_addr'
 export proxy_add_x_forwarded_for='$proxy_add_x_forwarded_for'
+export uri='$uri'
 
 # Database Usernames / Password (Make sure to update CONNECT_STRING if you change these)
 export MYSQL_ROOT_PASSWORD=onlyeric

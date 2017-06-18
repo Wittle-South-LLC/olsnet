@@ -58,7 +58,14 @@ export function fetchReduxAction (payload, username = undefined, password = unde
       default:
         throw new Error('fetchReduxAction: Invalid or mssing method in payload')
     }
-    return fetch(process.env.API_ROOT + payload.apiUrl, headers)
+    // The following is a hack so that we can use relative paths for APIs
+    // fetch takes relative paths when executing in the browser (where window
+    // is guaranteed to be defined), and requires absolute paths when running
+    // in node.js server environments, which is where our tests run. If you
+    // change how baseUrl is done for tests, you need to fix the TEST_URL
+    // definition in bin/testme as well
+    let baseUrl = typeof window === 'undefined' ? 'http://localhost:' + process.env.WEBSERVER_HOST_PORT : ''
+    return fetch(baseUrl + '/api/v1' + payload.apiUrl, headers)
       .then(response => checkResponse(payload.method, response))
       .then(json => dispatch(fetchSuccess(payload.type, payload.sendData, json, successPath)))
       .catch(error => dispatch(fetchError(payload.type, payload.sendData, error)))

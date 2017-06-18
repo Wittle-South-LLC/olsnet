@@ -3,7 +3,7 @@
 This repository is intended to be the core project for Our Life Stories.net.
 It implements a container-based web application that has persistence via a 
 MySQL container, a RESTful API implemented as a Python service, and an HTML5
-UI implemented using React, React-Router, and Redux, assmebled with webpack.
+UI implemented using React, React-Router 4, and Redux, assmebled with webpack.
 
 ## Project Structure
 
@@ -40,5 +40,32 @@ If you use the above syntax, you'll need to stop the services the same way:
 
     source bin/olsnet-dev; docker-compose stop
 
+## Code Splitting
 
+The application also demonstrates code splitting with dynamic module loading.
+With the various third party code libraries, the total volume of code is
+getting large, so this uses both code splitting defined by the application
+source (using System.import and promises) as well as by webpack plugins.
 
+## Internationalization
+
+The application also demonstrates how to handle at least translation using
+react-intl. It leverages the react-intl babel plugins to dynamically generate
+translation files through extraction of tranlation elements from source
+
+## API First Development
+
+This application also demonstrates some components of API first development.
+The python REST API server is built using the Connexion project, which 
+dynamically maps an OpenAPI 2.0 specification from YAML to Python. So adding
+new APIs or changing existing APIs starts with modifying the spec, and then
+writing the Python code. I have not yet found a useful way to dynamically
+integrated a Redux app via API spec parsing, so the client API consumption
+is generated manually.
+
+## Code coverge for unit & integration tests
+
+This application includes extensive code coverage for both server and client.
+The testme script can generate server and client coverage in a single run,
+and include integration tests where the client data model is making actual
+API calls rather than just using mocking.

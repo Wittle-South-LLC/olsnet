@@ -21,14 +21,14 @@ export function loginUser (username, password, nextPath = undefined) {
   }
 }
 
-export function registerUser (username, password, email, reCaptchaResponse, nextPath = undefined) {
+export function registerUser (username, password, email, phone, reCaptchaResponse, nextPath = undefined) {
   return (dispatch, getState) => {
     if (!getState().hasIn(['user', 'fetchingUser'])) {
       let payload = {
         apiUrl: '/users',
         method: 'POST',
         type: REGISTER_USER,
-        sendData: { username, password, email, reCaptchaResponse }
+        sendData: { username, password, email, phone, reCaptchaResponse }
       }
       return dispatch(fetchReduxAction(payload, username, password, nextPath))
     } else return handleDoubleClick(dispatch, nextPath)

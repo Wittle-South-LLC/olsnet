@@ -70,6 +70,7 @@ services:
       - proxy_add_x_forwarded_for
       - server_name
       - host
+      - uri
     # Build the nginix configuration file from a template; allows us
     # to set the webserver port and the app server port by environment vars
     command: /bin/bash -c "envsubst < /etc/nginx/nginx.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"

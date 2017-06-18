@@ -6,7 +6,6 @@ import { userMessage } from '../user/userReducer'
 
 export function fetchStatus (state = Map({ fetching: false, message: undefined }), action) {
   if (action.type === SET_MESSAGE) {
-    console.log('fetchStatusReducer handling SET_MESSAGE with ' + action.message.id)
     return state.delete('transitionTo').set('message', action.message).set('messageType', action.messageType)
   } else if (action.type === TRANSITION_TO) {
     return state.set('transitionTo', action.newPath)

@@ -5,6 +5,12 @@ client/node_modules/**
 # We don't need the log directory, it is clearly local
 logs/*
 
+# We don't need the web directory, it is all generated
+web/*
+
+# We don't need the messages directory, it is all generated
+client/messages/**
+
 # Let's generally exclude the directories created by
 # virtualenv, except the one file I put in bin
 server/lib/**
