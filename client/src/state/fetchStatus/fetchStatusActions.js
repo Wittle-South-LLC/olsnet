@@ -64,7 +64,9 @@ export function fetchReduxAction (payload, username = undefined, password = unde
     // in node.js server environments, which is where our tests run. If you
     // change how baseUrl is done for tests, you need to fix the TEST_URL
     // definition in bin/testme as well
-    let baseUrl = typeof window === 'undefined' ? 'http://localhost:' + process.env.WEBSERVER_HOST_PORT : ''
+    let baseUrl = (typeof window === 'undefined' ||
+                   (typeof navigator !== 'undefined' &&
+                    navigator.userAgent === 'node.js')) ? 'http://localhost:' + process.env.WEBSERVER_HOST_PORT : ''
     return fetch(baseUrl + '/api/v1' + payload.apiUrl, headers)
       .then(response => checkResponse(payload.method, response))
       .then(json => dispatch(fetchSuccess(payload.type, payload.sendData, json, successPath)))
