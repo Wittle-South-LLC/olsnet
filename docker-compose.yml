@@ -23,7 +23,7 @@ services:
     ports:
       - "${MYSQL_HOST_PORT}:${MYSQL_CONTAINER_PORT}"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "-u$MYSQL_USER", "-p$MYSQL_PASSWORD", "ping", "-h", "localhost"]
       timeout: 5s
       retries: 10
   # Server built on a existing dockerfile
