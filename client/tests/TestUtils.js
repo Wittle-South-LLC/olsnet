@@ -75,7 +75,6 @@ export function makeTestContext (state, dispatchFunc = undefined, childContextTy
   if (childContextTypes) {
     opts['childContextTypes'] = childContextTypes
   }
-  console.log('opts = ', opts)
   return opts
 }
 
