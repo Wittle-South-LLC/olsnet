@@ -61,7 +61,7 @@ export default class SiteMenu extends React.Component {
              onClick={this.onMenuClick.bind(undefined, option.path)}>{option.label}</a>
         </li>)
       : []
-    let userHeader = this.context.reduxState.getIn(['user', 'token']) !== undefined
+    let userHeader = this.context.reduxState.getIn(['user', 'username']) !== undefined
       ? <div className='loggedIn'>
           <span className='titleor'>
             {this.context.intl.formatMessage(this.componentText.welcomeText, {username: this.context.reduxState.getIn(['user', 'username'])})}

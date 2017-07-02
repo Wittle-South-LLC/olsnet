@@ -7,8 +7,8 @@ import { createStore, applyMiddleware } from 'redux'
 import nock from 'nock'
 import expect from 'expect'
 import { isd, testAsync } from './TestUtils'
-import { listUsers, loginUser, logoutUser, registerUser } from '../../client/src/state/user/userActions'
-import { user, userMessage, componentText as userComponentText } from '../../client/src/state/user/userReducer'
+import { listUsers, loginUser, logoutUser, registerUser, hydrateApp } from '../../client/src/state/user/userActions'
+import { user, componentText as userComponentText } from '../../client/src/state/user/userReducer'
 import { fetchStatus } from '../../client/src/state/fetchStatus/fetchStatusReducer'
 import { componentText } from '../../client/src/state/fetchStatus/fetchStatusActions'
 
@@ -26,8 +26,7 @@ const initialState = fromJS({
     email: undefined,
     phone: undefined,
     preferences: undefined,
-    user_id: undefined,
-    token: undefined
+    user_id: undefined
   }
 })
 
@@ -35,15 +34,16 @@ const initialState = fromJS({
 const stateLoginStart = initialState.setIn(['user', 'fetchingUser'], true)
                                     .setIn(['fetchStatus', 'fetching'], true)
                                     .setIn(['user', 'username'], 'testing')
+const stateHydrateStart = initialState.setIn(['user', 'fetchingUser'], true)
+                                      .setIn(['fetchStatus', 'fetching'], true)
 const stateLoginSuccess = initialState.setIn(['user', 'username'], 'testing')
-                                      .setIn(['user', 'token'], 'token')
                                       .setIn(['user', 'phone'], '9999')
                                       .setIn(['user', 'email'], 'test@wittle.net')
                                       .setIn(['user', 'preferences'], fromJS({color: 'blue'}))
                                       .setIn(['user', 'user_id'], 'UUID')
                                       .setIn(['fetchStatus', 'messageType'], 'status')
                                       .setIn(['fetchStatus', 'message'], userComponentText.userLogin)
-const stateLogoutSuccess = initialState.setIn(['fetchStatus', 'message'], userMessage(logoutUser()))
+const stateLogoutSuccess = initialState.setIn(['fetchStatus', 'message'], userComponentText.userLogout)
                                        .setIn(['fetchStatus', 'messageType'], 'status')
                                        .setIn(['fetchStatus', 'transitionTo'], '/home')
 const stateLoginFailed = initialState.setIn(['fetchStatus', 'message'], componentText.invalidCredentials)
@@ -55,6 +55,8 @@ const stateListUsersFailed = stateLoginSuccess.setIn(['fetchStatus', 'message'],
                                               .setIn(['fetchStatus', 'messageType'], 'error')
 const userList = [ { username: 'testing', preferences: {}, user_id: 1 } ]
 const stateUsersListed = stateLoginSuccess.setIn(['user', 'list'], fromJS(userList))
+const stateLogoutStart = stateLoginSuccess.setIn(['user', 'fetchingUser'], true)
+                                          .setIn(['fetchStatus', 'fetching'], true)
 // Create states starting from initialState
 const stateRegisterStart = initialState.setIn(['user', 'creatingUser'], true)
                                        .setIn(['fetchStatus', 'fetching'], true)
@@ -70,9 +72,6 @@ describe('user: testing reducing of synchronous actions', () => {
   it('returns initial state', () => {
     expect(isd(testUserState(undefined, {}), initialState)).toEqual(true)
   })
-  it('handles logoutUser', () => {
-    expect(isd(testUserState(stateLoginSuccess, logoutUser()), stateLogoutSuccess)).toEqual(true)
-  })
 })
 
 describe('user: testing reducing of asynchronous actions', () => {
@@ -82,7 +81,19 @@ describe('user: testing reducing of asynchronous actions', () => {
   it('handles loginUser with a successful response', (done) => {
     let store = createStore(testUserState, initialState, applyMiddleware(thunkMiddleware))
     const receivedData = {
-      token: 'token',
+      username: 'testing',
+      user_id: 'UUID',
+      preferences: {color: 'blue'},
+      phone: '9999',
+      email: 'test@wittle.net'
+    }
+    nock(process.env.TEST_URL).post('/login').reply(200, receivedData)
+    testAsync(store, stateLoginStart, stateLoginSuccess, done)
+    store.dispatch(loginUser('testing', 'testing'))
+  })
+  it('handles hydrateApp with a successful response', (done) => {
+    let store = createStore(testUserState, initialState, applyMiddleware(thunkMiddleware))
+    const receivedData = {
       username: 'testing',
       user_id: 'UUID',
       preferences: {color: 'blue'},
@@ -90,12 +101,12 @@ describe('user: testing reducing of asynchronous actions', () => {
       email: 'test@wittle.net'
     }
     nock(process.env.TEST_URL).get('/login').reply(200, receivedData)
-    testAsync(store, stateLoginStart, stateLoginSuccess, done)
-    store.dispatch(loginUser('testing', 'testing'))
+    testAsync(store, stateHydrateStart, stateLoginSuccess, done)
+    store.dispatch(hydrateApp())
   })
   it('handles loginUser with an unsuccessful response', (done) => {
     let store = createStore(testUserState, initialState, applyMiddleware(thunkMiddleware))
-    nock(process.env.TEST_URL).get('/login').reply(401)
+    nock(process.env.TEST_URL).post('/login').reply(401)
     testAsync(store, stateLoginStart, stateLoginFailed, done)
     store.dispatch(loginUser('testing', 'invalid password'))
   })
@@ -103,13 +114,13 @@ describe('user: testing reducing of asynchronous actions', () => {
     let store = createStore(testUserState, stateLoginSuccess, applyMiddleware(thunkMiddleware))
     nock(process.env.TEST_URL).get('/users').reply(200, userList)
     testAsync(store, stateListUsersStart, stateUsersListed, done)
-    store.dispatch(listUsers('testing', 'testing'))
+    store.dispatch(listUsers())
   })
   it('handles listUsers with an unsuccessful response', (done) => {
     let store = createStore(testUserState, stateLoginSuccess, applyMiddleware(thunkMiddleware))
     nock(process.env.TEST_URL).get('/users').reply(401)
     testAsync(store, stateListUsersStart, stateListUsersFailed, done)
-    store.dispatch(listUsers('testing', 'invalid password'))
+    store.dispatch(listUsers())
   })
   it('handles registerUser with a successful response and next path', (done) => {
     let store = createStore(testUserState, initialState, applyMiddleware(thunkMiddleware))
@@ -123,6 +134,12 @@ describe('user: testing reducing of asynchronous actions', () => {
     nock(process.env.TEST_URL).post('/users').reply(400)
     testAsync(store, stateRegisterStart, stateRegisterFailed, done)
     store.dispatch(registerUser('testing2', '', 'email'))
+  })
+  it('handles logoutUser', (done) => {
+    let store = createStore(testUserState, stateLoginSuccess, applyMiddleware(thunkMiddleware))
+    nock(process.env.TEST_URL).post('/logout').reply(200, {})
+    testAsync(store, stateLogoutStart, stateLogoutSuccess, done)
+    store.dispatch(logoutUser())
   })
 })
 
