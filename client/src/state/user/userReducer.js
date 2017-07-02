@@ -4,7 +4,7 @@
 // cannot be reached without un-necessary test cases that would have to be
 // written for each individual action in the state machine
 import { Map, fromJS } from 'immutable'
-import { LIST_USERS, LOGIN_USER, LOGOUT_USER, REGISTER_USER } from './userActions'
+import { LIST_USERS, LOGIN_USER, LOGOUT_USER, REGISTER_USER, HYDRATE_APP } from './userActions'
 import { FETCH_START, FETCH_ERROR, FETCH_SUCCESS } from '../fetchStatus/fetchStatusActions'
 import { defineMessages } from 'react-intl'
 
@@ -19,6 +19,7 @@ export function userMessage (action) {
     case LOGOUT_USER:
       return componentText.userLogout
     case LOGIN_USER:
+    case HYDRATE_APP:
       if (action.status === FETCH_SUCCESS) {
         return componentText.userLogin
       } else {
@@ -38,13 +39,19 @@ export function user (state = Map({
   email: undefined,
   phone: undefined,
   user_id: undefined,
-  preferences: undefined,
-  token: undefined }), action) {
+  preferences: undefined }), action) {
   switch (action.type) {
     case LOGIN_USER:
       switch (action.status) {
         case FETCH_START: return state.set('fetchingUser', true).set('username', action.sendData.username)
         case FETCH_ERROR: return state.delete('fetchingUser').set('username', undefined)
+        case FETCH_SUCCESS:
+          return fromJS(action.receivedData)
+      }
+    case HYDRATE_APP:  // eslint-disable-line no-fallthrough
+      switch (action.status) {
+        case FETCH_START: return state.set('fetchingUser', true)
+        case FETCH_ERROR: return state.delete('fetchingUser')
         case FETCH_SUCCESS:
           return fromJS(action.receivedData)
       }
@@ -63,13 +70,18 @@ export function user (state = Map({
           return state.set('list', fromJS(action.receivedData))
       }
     case LOGOUT_USER:  // eslint-disable-line no-fallthrough
-      return state.delete('list')
-                  .set('username', undefined)
-                  .set('token', undefined)
-                  .set('phone', undefined)
-                  .set('email', undefined)
-                  .set('user_id', undefined)
-                  .set('preferences', undefined)
-    default: return state
+      switch (action.status) {
+        case FETCH_START: return state.set('fetchingUser', true)
+        case FETCH_ERROR: return state.delete('fetchingUser')
+        case FETCH_SUCCESS:
+          return state.delete('list')
+                      .delete('fetchingUser')
+                      .set('username', undefined)
+                      .set('phone', undefined)
+                      .set('email', undefined)
+                      .set('user_id', undefined)
+                      .set('preferences', undefined)
+      }
+    default: return state // eslint-disable-line no-fallthrough
   }
 }

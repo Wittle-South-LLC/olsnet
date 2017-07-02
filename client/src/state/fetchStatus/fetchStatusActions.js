@@ -35,25 +35,20 @@ export function setNewPath (newPath) {
    - sendData      => Data associated with the action to fetch, sent to server
 */
 
-export function fetchReduxAction (payload, username = undefined, password = undefined, successPath = undefined) {
+export function fetchReduxAction (payload, successPath = undefined) {
   return (dispatch, getState) => {
-    /* If we didn't get a username and password, it is because we're supposed to get that from state */
-    if (username === undefined) {
-      username = getState().getIn(['user', 'token'])
-      password = 'unused'
-    }
     dispatch(fetchStart(payload.type, payload.sendData))
     let headers
     switch (payload.method) {
       /* GET does not have payloads */
       case 'GET':
-        headers = getApiHeaders(payload.method, username, password)
+        headers = getApiHeaders(payload.method)
         break
       /* PUT, POST, and DELETE all have payloads */
       case 'DELETE':
       case 'PUT':
       case 'POST':
-        headers = getApiHeaders(payload.method, username, password, JSON.stringify(payload.sendData))
+        headers = getApiHeaders(payload.method, JSON.stringify(payload.sendData))
         break
       default:
         throw new Error('fetchReduxAction: Invalid or mssing method in payload')
@@ -110,27 +105,54 @@ function fetchSuccess (type, sendData, receivedData, nextPath) {
   return { type, status: FETCH_SUCCESS, sendData, receivedData, nextPath }
 }
 
-/* Construct an HTTP basic authentication header given a username and password */
-function getAuthstring (username, password) {
-  return 'Basic ' +
-    Buffer.from(unescape(encodeURIComponent(username)) + ':' +
-                 unescape(encodeURIComponent(password)), 'utf8').toString('base64')
-}
-
 /* Construct the payload argument to fetch given the HTTP method,
    authentication information, and optional body */
-function getApiHeaders (httpMethod, username, password, body = undefined) {
+function getApiHeaders (httpMethod, body = undefined) {
   const result = {
     'method': httpMethod,
     'headers': {
-      'Authorization': getAuthstring(username, password),
       'Content-Type': 'application/json'
-    }
+    },
+    'credentials': 'same-origin'
   }
   if (body !== undefined) {
     result['body'] = body
   }
+  // The following code looks in the document for cookies to see if the
+  // server's CSRF token is available. If so, it adds it as a header
+  // to the request, which is required for most operations
+  if (typeof document !== 'undefined' && document.cookie) {
+    let csrfToken = getCookie('csrf_access_token')
+    if (csrfToken) {
+      console.log('Sending header CSRF token: ', csrfToken)
+      if (getCookie('access_token_cookie')) {
+        console.log('Access token cookie = ', getCookie('access_token_cookie'))
+      }
+      if (getCookie('refresh_token_cookie')) {
+        console.log('Refresh token cookie = ', getCookie('access_token_cookie'))
+      }
+      result['headers']['X-CSRF-TOKEN'] = csrfToken
+    } else {
+      console.log('Missing csrf_access_token')
+      if (getCookie('csrf_refresh_token')) {
+        console.log('--> We do have a csrf_refresh_token')
+      }
+    }
+  } else {
+    console.log('Document object has no cookies')
+  }
   return result
+}
+
+// This function came from one of the answers to a StackOverflow question:
+// https://stackoverflow.com/questions/10730362/get-cookie-by-name
+// Credit to John S.
+function getCookie (name) {
+  function escape (s) {
+    return s.replace(/([.*+?\^${}()|\[\]\/\\])/g, '\\$1') 
+  }
+  var match = document.cookie.match(RegExp('(?:^|;\\s*)' + escape(name) + '=([^;]*)'))
+  return match ? match[1] : null
 }
 
 export function handleDoubleClick (dispatch, nextPath) {
