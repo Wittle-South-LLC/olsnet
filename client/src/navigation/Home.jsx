@@ -9,7 +9,6 @@ import Register from '../user/Register'
 export default class Home extends React.Component {
   constructor (props, context) {
     super(props, context)
-    console.log('Eric - Home(context) is ', context)
     this.componentText = defineMessages({
       pageName: { id: 'Home.pageName', defaultMessage: 'Hello World!' }
     })

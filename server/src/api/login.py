@@ -1,48 +1,54 @@
-"""Module to handle /login API endpoint"""
-from connexion import NoContent
-import uuid
-from flask_httpauth import HTTPBasicAuth
-from flask import g, current_app
-from itsdangerous import (TimedJSONWebSignatureSerializer
-                          as Serializer, BadSignature, SignatureExpired)
+"""login.py - Module to handle /login API endpoint"""
+from flask_jwt_extended import create_access_token, \
+     jwt_required, get_jwt_identity, \
+     create_refresh_token, set_access_cookies, \
+     set_refresh_cookies, current_user
+from flask import g, abort, jsonify, current_app
 from dm.User import User
 
-# This will be a global constant imported by other APIs
-AUTH = HTTPBasicAuth()
+# Post method for login added 6/27/17 as part of moving from original
+# custom token generation scheme using HTTPAuth and basic authentication
+# to a JWT authentication method using flask_jwt_extended.
+def post(login_data):
+    """handles POST verb for /login endpoint"""
 
-@AUTH.login_required
-def search():
-    """Method to do something, but I don't know what"""
-    token = g.user.generate_auth_token(current_app.config['SECRET_KEY'], 600)
-    # Dump the attributes of the current logged in user as a dict
-    ret = g.user.dump()
-    # Add the token just created to the user dict and return it
-    ret['token'] = token.decode('ascii')
-    return ret, 200
+    # Get the username and password from the data posted to the endpoint
+    username = login_data['username']
+    password = login_data['password']
 
-# Helper method to verify tokens
-def verify_auth_token(token, secret_key):
-    """Method to verify authorizing tokens from incoming requests"""
-    ser = Serializer(secret_key)
-    try:
-        data = ser.loads(token)
-    except SignatureExpired:
-        return None    # valid token, but expired
-    except BadSignature:
-        return None    # invalid token
-    user = g.db_session.query(User).get(uuid.UUID(data['user_id']).bytes)
-    return user
+    # Look up the user and verify that the password is correct
+    user = g.db_session.query(User).filter(User.username == username).one_or_none()
+    if not user or not user.verify_password(password):
+        abort(404, 'Invalid Username/Password Combination')
 
-# Helper method to verify password
-@AUTH.verify_password
-def verify_password(username_or_token, password):
-    """Method to verify passwords provided as part of API calls"""
-    # first try to authenticate by token
-    user = verify_auth_token(username_or_token, current_app.config['SECRET_KEY'])
-    if not user:
-        # try to authenticate with username/password
-        user = g.db_session.query(User).filter(User.username == username_or_token).one_or_none()
-        if not user or not user.verify_password(password):
-            return False
+    # Ensure the user data model object is available in the Flask global object
     g.user = user
-    return True
+
+    # Create access and refresh tokens for the user. See the documentation for
+    # flask-jwt-extended for details on these two different kinds of tokens
+    access_token = create_access_token(identity=username)
+    refresh_token = create_refresh_token(identity=username)
+
+    # Build the response data by dumping the user data
+    resp = jsonify(g.user.dump())
+
+    # Set the tokens we created as cookies in the response
+    set_access_cookies(resp, access_token)
+    set_refresh_cookies(resp, refresh_token)
+
+    # TODO: Figure out what the server needs to do, if anything, to enable
+    # the CSRF cookie to be accessible to via fetch() headers in browser apps.
+    # Some documentation implies that the ability to allow this must be granted
+    # from the server via headers, but this may be specific to CORS situations,
+    # which does not currently apply to this app. The below 3rd parameter to
+    # return adds a custom header which is one component of CORS security to
+    # allow access to the cookie
+    return resp, 200, {'Access-Control-Expose-Headers': 'Set-Cookie, Content-Type'}
+
+# The /login enpoint with the GET verb is intended to be used by client apps
+# to reload the user's application data when needed (e.g. after an application
+# refresh, or browser restart)
+@jwt_required
+def search():
+    """Handles GET verb for /login endpoint"""
+    return jsonify(g.user.dump()), 200

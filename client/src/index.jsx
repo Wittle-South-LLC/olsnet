@@ -22,6 +22,7 @@ import { IntlProvider, addLocaleData, defineMessages } from 'react-intl'
 import fr from 'react-intl/locale-data/fr'
 import baseApp from './state/baseApp'
 import Container from './Container'
+import { hydrateApp } from './state/user/userActions'
 import './index.css'
 
 let defaultLocaleData = {}
@@ -76,6 +77,9 @@ export class App extends React.Component {
       }).catch((error) => {
         console.error(error)
       })
+  }
+  componentDidMount() {
+    this.store.dispatch(hydrateApp())
   }
   changeLocale (loc) {
     this.loadLocale(loc.target.value)

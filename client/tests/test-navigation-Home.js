@@ -30,38 +30,16 @@ const defaultState = fromJS({
 })
 
 describe('Home basic render tests', () => {
-  it('HTML: renders without logged in user', () => {
+  /* Removed 7/1/17 - I was only using render() before because I could not get mount()
+   * or shallow() to work. shallow() is broken with context in enzyme right now (issue 664),
+   * but I have mount working as of TPS-30
+  it('Render: renders without logged in user', () => {
     const rendered = render(<TestContainer><IntlProvider locale='en'><MemoryRouter><Home /></MemoryRouter></IntlProvider></TestContainer>, makeTestContext(defaultState))
     chai.expect(rendered.text()).to.contain('Hello World!')
   })
-  /*
-  it('Mount: simple test', () => {
-//    const mounted = mount(<TestContainer><IntlProvider locale='en'><MemoryRouter><Home /></MemoryRouter></IntlProvider></TestContainer>, makeTestContext(defaultState))
-    console.log('About to mount')
-    const mounted = mount(<p>Hello World!</p>)
-    console.log('mounted = ', mounted)
+  */
+  it('Mount: renders without Container and logged in user', () => {
+    const mounted = mount(<IntlProvider locale='en'><MemoryRouter><Home /></MemoryRouter></IntlProvider>)
     chai.expect(mounted).to.contain(<p>Hello World!</p>)
   })
-  it('Shallow: Just Home', () => {
-    const wrapper = shallow(<Home />, makeTestContext(defaultState))
-    chai.expect(wrapper).to.contain(<p>Hello World!</p>)
-  })
-  it('Shallow: Home wrapped with MemoryRouter', () => {
-    const wrapper = shallow(<MemoryRouter><Home /></MemoryRouter>, makeTestContext(defaultState))
-    chai.expect(wrapper).to.contain(<p>Hello World!</p>)
-  })
-  it('Shallow: Home with IntlProvider and MemoryRouter', () => {
-    const wrapper = shallow(<IntlProvider locale='en'><MemoryRouter><Home /></MemoryRouter></IntlProvider>, makeTestContext(defaultState))
-    chai.expect(wrapper).to.contain(<p>Hello World!</p>)
-  })
-  it('Shallow: Home with TestContainer, IntlProvider, and MemoryRouter attempting to check just Home', () => {
-    const wrapper = shallow(<TestContainer><IntlProvider locale='en'><MemoryRouter><Home /></MemoryRouter></IntlProvider></TestContainer>, makeTestContext(defaultState))
-    chai.expect(wrapper).to.contain(<p>Hello World!</p>)
-  })
-  it('Shallow: Home with TestContainer, IntlProvider, and MemoryRouter attempting to check just Home', () => {
-    const wrapper = shallow(<TestContainer><IntlProvider locale='en'><MemoryRouter><Home /></MemoryRouter></IntlProvider></TestContainer>, makeTestContext(defaultState))
-    const home = wrapper.find(Home)
-    chai.expect(home).to.contain(<p>Hello World!</p>)
-  })
-  */
 })

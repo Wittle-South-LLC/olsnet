@@ -68,4 +68,9 @@ is generated manually.
 This application includes extensive code coverage for both server and client.
 The testme script can generate server and client coverage in a single run,
 and include integration tests where the client data model is making actual
-API calls rather than just using mocking.
+API calls rather than just using mocking
+
+## Modern Authentication
+
+Provides JWT based authentication that includes CSRF protection, and user
+identification persistence across application reload / browser restart.

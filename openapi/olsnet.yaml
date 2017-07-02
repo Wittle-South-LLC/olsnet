@@ -47,28 +47,9 @@ paths:
               $ref: '#/definitions/User'
         500:
           description: Unknown API server error
+      security:
+        - main: []
   /users/{username}:
-#    Removed 6/17/17 - no use case for individual user get
-#    get:
-#      summary: Get a single user by username
-#      tags:
-#        - Users
-#      parameters:
-#        - name: username
-#          in: path
-#          type: string
-#          required: true
-#          minLength: 4
-#          maxLength: 32
-#      responses:
-#        200:
-#          description: Returns a single user
-#          schema:
-#            $ref: '#/definitions/loginUser'
-#        404:
-#          description: User does not exist
-#      security:
-#        - basic: []
     delete:
       summary: Delete a user by username
       tags:
@@ -86,33 +67,68 @@ paths:
         404:
           description: User not found
       security:
-        - basic: []
+        - main: []
   # This is a login endpoint.
   /login:
-    # This is an HTTP operation
-    get:
-      # Describes the post behavior of the login endpoint
+    post:
       summary:
-        Authenticate - get token and initial app data for user
+        Authenticate via JWT and hydrate the app
       tags:
         - Authentication
       description: |
-        Authenticates users to the application.
-        Required parameters include username and password.
-        Returns an authentication token
+        Authenticate users to the application with username and password in POST data.
+        Returns both an HTTP-only cookie and an authentication token
+      parameters:
+        - name: login_data
+          in: body
+          schema:
+            $ref: '#/definitions/Login'
       responses:
-        # Successful Response
         200:
           description: Successful response
           schema:
             $ref: '#/definitions/loginUser'
-        # Unsuccessful Login
         404:
           description: Invalid user or password
         500:
-          description: Unknown API server error
+          description: Unknown API or server error
+    get:
+      summary:
+        Hydrate the app for an already authenticated user
+      tags:
+        - Authentication
+      description: |
+        Requires the user to already be authenticated.
+        Provides all of the user metadata that would be delivered for a new login
+      responses:
+        200:
+          description: Successful response
+          schema:
+            $ref: '#/definitions/loginUser'
+        401:
+          description: User not authenticated
+        500:
+          description: Unknown API or server error
       security:
-        - basic: []
+        - main: []
+  /logout:
+    post:
+      summary:
+        Remove authentication and exit the application
+      tags:
+        - Authentication
+      description: |
+        Ending authentication for a user requires removing a non-expiring token.
+        This method will clear the JWT tokens for the application
+      responses:
+        200:
+          description: Successful response
+        400:
+          description: User not logged in
+        500:
+          description: Unknown API or server error
+      security:
+        - main: []
   # API to shut down the server
   /shutdown:
     post:
@@ -137,10 +153,29 @@ paths:
           description: User not authorized to shut down server
 
 securityDefinitions:
-  basic:
-    type: basic
+  main:
+    type: apiKey
+    description: User access key in cookie and CSRF key in header
+    name: X-CSRF-TOKEN
+    in: header
 
 definitions:
+  Login:
+    type: object
+    required:
+      - username
+      - password
+    properties:
+      username:
+        type: string
+        description: Login user name
+        minLength: 4
+        maxLength: 32
+      password:
+        type: string
+        description: Password
+        minLength: 4
+        maxLength: 32
   User:
     type: object
     required:

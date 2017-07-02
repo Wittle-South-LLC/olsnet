@@ -1,9 +1,8 @@
 """Module to handle /login API endpoint"""
 import uuid
-# from connexion import NoContent
 from flask import g
 from dm.User import User
-from api.login import AUTH
+from flask_jwt_extended import jwt_required
 
 def post(user):
     """Method to handle POST verb for /user enpoint"""
@@ -24,7 +23,7 @@ def post(user):
     g.db_session.commit()
     return {'user_id': uuid.UUID(bytes=new_user.user_id)}, 201
 
-@AUTH.login_required
+@jwt_required
 def search():
     """Method to handle GET verb with no URL parameters"""
     user_list = g.db_session.query(User)\
@@ -35,17 +34,7 @@ def search():
         ret.append(user.dump())
     return ret, 200
 
-# Removed 6/17/17 - no use case for a get, user details are returned by login
-# We'll need a get, but I wonder what kind of object I need to pass to
-# a get method. Hopefully a SQLAchemy object will suffice
-#
-#@AUTH.login_required
-#def get(username):
-#    """Method to handle GET verb for /users/{username} endpoint"""
-#    find_user = g.db_session.query(User).filter(User.username == username).one_or_none()
-#    return find_user.dump() or ('Not found', 404)
-
-@AUTH.login_required
+@jwt_required
 def delete(username):
     """Method to handle DELETE verb for /users/{username} endpoing"""
     delete_user = g.db_session.query(User).filter(User.username == username).one_or_none()
