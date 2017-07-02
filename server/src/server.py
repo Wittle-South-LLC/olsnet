@@ -3,6 +3,7 @@ import os.path
 import logging
 import connexion
 from connexion.resolver import RestyResolver
+from flask_jwt_extended import JWTManager, get_jwt_identity
 from flask import request, g, abort
 from sqlalchemy import create_engine, event, exc, select
 from sqlalchemy.orm import sessionmaker
@@ -19,6 +20,8 @@ OPENAPI_SPEC = os.environ['OPENAPI_SPEC']
 # Create the connextion-based Flask app, and tell it where to look for API specs
 APP = connexion.FlaskApp(__name__, specification_dir='swagger/', swagger_json=True)
 FAPP = APP.app
+# JWT implementation
+JWT = JWTManager(FAPP)
 
 # Add our specific API spec, and tell it to use the Resty resolver to find the
 # specific python module to handle the API call by navigating the source tree
@@ -41,6 +44,27 @@ LOGGER.debug('Running on port: ' + APPSERVER_PORT)
 # Get the secret key from the environment
 FAPP.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 
+# Set JWT configuration options
+# Configure application to store JWTs in cookies
+FAPP.config['JWT_TOKEN_LOCATION'] = ['cookies']
+# Only allow JWT cookies to be sent over https. In production, this
+# should likely be True
+FAPP.config['JWT_COOKIE_SECURE'] = False
+# Set the cookie paths, so that you are only sending your access token
+# cookie to the access endpoints, and only sending your refresh token
+# to the refresh endpoint. Technically this is optional, but it is in
+# your best interest to not send additional cookies in the request if
+# they aren't needed.
+FAPP.config['JWT_ACCESS_COOKIE_PATH'] = '/'
+FAPP.config['JWT_REFRESH_COOKIE_PATH'] = '/token_refresh'
+# Enable csrf double submit protection. See this for a thorough
+# explination: http://www.redotheweb.com/2015/11/09/api-security.html
+FAPP.config['JWT_COOKIE_CSRF_PROTECT'] = True
+# Ensure that CSRF protection covers GET operations as well as those
+# that describe state change; flask_jwt_extended defaults to only covering
+# state change operations
+FAPP.config['JWT_CSRF_METHODS'] = ['POST', 'PUT', 'PATCH', 'DELETE', 'GET']
+
 # Create database connection and sessionmaker
 try:
     ENGINE = create_engine(CONNECT_STRING, pool_recycle=3600)
@@ -57,12 +81,25 @@ try:
 except exc.SQLAlchemyError:
     LOGGER.debug('Caught an exception in schema setup' + exc.SQLAlchemyError)
 
+# This method ensures that we have a user object both in global and
+# in the current_user proxy from flask-jwt-extended
+@JWT.user_loader_callback_loader
+def user_loader_callback(identity):
+    """Callback to load user object for requests where jwt_identity is required"""
+    g.user = g.db_session.query(User).filter(User.username == identity).one_or_none()
+    if not g.user:
+        return None
+    return g.user
+
 # Need to make sure that the use of the database session is
 # scoped to the request to avoid open orm transactions between requests
 @FAPP.before_request
 def before_request():
     """Method to do work before the request"""
+    # Ensure there is a database session available for the request
     g.db_session = DBSESSION()
+
+    # Confirm that any POST or PUT includes JSON (except logout)
     if (request.method == 'POST' or request.method == 'PUT') and \
         not request.is_json and request.path != '/shutdown':
         if request.path != '/fb_login':
