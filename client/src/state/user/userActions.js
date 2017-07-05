@@ -1,12 +1,24 @@
 /* userActions.js - User actions */
 import { fetchReduxAction, handleDoubleClick } from '../fetchStatus/fetchStatusActions'
+import { getUserName, getUserEmail, getUserPhone,
+         getUserPreferences, getUserRoles, getUserPassword } from './user'
 
+export const CREATE_USER = 'CREATE_USER'
+export const EDIT_USER = 'EDIT_USER'
 export const LOGIN_USER = 'LOGIN_USER'
 export const HYDRATE_APP = 'HYDRATE_APP'
 export const REGISTER_USER = 'REGISTER_USER'
 export const LOOKUP_USER = 'LOOKUP_USER'
 export const LOGOUT_USER = 'LOGOUT_USER'
 export const LIST_USERS = 'LIST_USERS'
+
+export function createUser () {
+  return { type: CREATE_USER }
+}
+
+export function editUserField (fieldName, fieldValue) {
+  return { type: EDIT_USER, fieldName, fieldValue }
+}
 
 // Should login in a user and populate the user section of state
 export function loginUser (username, password, nextPath = undefined) {
@@ -39,14 +51,22 @@ export function hydrateApp (nextPath = undefined) {
   }
 }
 
-export function registerUser (username, password, email, phone, reCaptchaResponse, nextPath = undefined) {
+export function registerUser (reCaptchaResponse, nextPath = undefined) {
   return (dispatch, getState) => {
     if (!getState().hasIn(['user', 'fetchingUser'])) {
+      let myUser = getState().getIn(['user', 'current'])
       let payload = {
         apiUrl: '/users',
         method: 'POST',
         type: REGISTER_USER,
-        sendData: { username, password, email, phone, reCaptchaResponse }
+        sendData: {
+          username: getUserName(myUser),
+          email: getUserEmail(myUser),
+          phone: getUserPhone(myUser),
+          preferences: getUserPreferences(myUser).toJS(),
+          roles: getUserRoles(myUser),
+          password: getUserPassword(myUser),
+          reCaptchaResponse }
       }
       return dispatch(fetchReduxAction(payload, nextPath))
     } else return handleDoubleClick(dispatch, nextPath)

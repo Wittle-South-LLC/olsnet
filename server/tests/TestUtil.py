@@ -12,10 +12,12 @@ BASE_URL = 'http://localhost:' + os.environ['WEBSERVER_HOST_PORT'] + '/api/v1'
 csrf_token = None
 
 def set_csrf_token(token):
+    """Sets a global CSRF token to enable CSRF headers for requests in the same session"""
     global csrf_token
     csrf_token = token
 
 def log_response_error(resp):
+    """Shared method for logging response errors"""
     if resp.status_code >= 400:
         LOGGER.debug('Response text = %s', resp.text)
 
@@ -37,5 +39,4 @@ def get_response_with_jwt(test_session, method, url, payload=None):
         return req.post(BASE_URL + url, **args)
     elif method == 'DELETE':
         return req.delete(BASE_URL + url, **args)
-    else:
-        return None
+    return None

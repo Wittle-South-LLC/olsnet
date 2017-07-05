@@ -32,6 +32,8 @@ paths:
             properties:
               user_id:
                 type: string
+        409:
+          description: One or more user fields that should be unique are duplicated
         500:
           description: Unknown API server error
     get:

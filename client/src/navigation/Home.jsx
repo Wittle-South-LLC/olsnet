@@ -4,7 +4,8 @@ import PropTypes from 'prop-types'
 import { Switch, Route } from 'react-router-dom'
 import { intlShape, defineMessages } from 'react-intl'
 import Login from '../user/Login'
-import Register from '../user/Register'
+// import Register from '../user/Register'
+import UserEdit from '../user/UserEdit'
 
 export default class Home extends React.Component {
   constructor (props, context) {
@@ -18,7 +19,8 @@ export default class Home extends React.Component {
       <div>
         <Switch>
           <Route path={'/home/login'} component={Login} />
-          <Route path={'/home/register'} component={Register} />
+          <Route path={'/home/register'} render={() => (
+            <UserEdit user={this.context.reduxState.getIn(['user', 'current'])} />)} />
         </Switch>
         <p>{this.context.intl.formatMessage(this.componentText.pageName)}</p>
       </div>
@@ -28,5 +30,6 @@ export default class Home extends React.Component {
 
 Home.contextTypes = {
   intl: intlShape,
+  reduxState: PropTypes.object,
   router: PropTypes.object
 }

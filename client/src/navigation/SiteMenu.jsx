@@ -2,7 +2,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { intlShape, defineMessages } from 'react-intl'
-import { logoutUser } from '../state/user/userActions'
+import { createUser, logoutUser } from '../state/user/userActions'
 import './SiteMenu.css'
 
 export default class SiteMenu extends React.Component {
@@ -38,6 +38,7 @@ export default class SiteMenu extends React.Component {
     this.setState({
       activePath: '/home/register'
     })
+    this.context.dispatch(createUser())
     this.context.router.history.push('/home/register')
   }
   onMenuToggle (e) {
@@ -61,10 +62,10 @@ export default class SiteMenu extends React.Component {
              onClick={this.onMenuClick.bind(undefined, option.path)}>{option.label}</a>
         </li>)
       : []
-    let userHeader = this.context.reduxState.getIn(['user', 'username']) !== undefined
+    let userHeader = this.props.userId !== undefined
       ? <div className='loggedIn'>
           <span className='titleor'>
-            {this.context.intl.formatMessage(this.componentText.welcomeText, {username: this.context.reduxState.getIn(['user', 'username'])})}
+            {this.context.intl.formatMessage(this.componentText.welcomeText, {username: this.props.username})}
           </span>
           <span onClick={this.onLogoutClick} className='titlelink'>
             {this.context.intl.formatMessage(this.componentText.logoutText)}

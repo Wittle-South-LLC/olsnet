@@ -31,6 +31,7 @@ export function fetchStatus (state = Map({ fetching: false, message: undefined }
         if (process.env.MESSAGE_LEVEL === 'debug') {
           console.log('FETCH_ERROR being handled with message: ', action.message)
         }
+        if (action.type === HYDRATE_APP) { return state.set('fetching', false) }
         return state.set('fetching', false)
                     .set('message', action.message)
                     .set('messageType', 'error')
