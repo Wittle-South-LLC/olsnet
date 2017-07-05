@@ -13,6 +13,7 @@ export const componentText = defineMessages({
   invalidCredentials: { id: 'fetchStatus.InvalidCredentials', defaultMessage: 'Invalid Credentials - please log in with a valid username and password' },
   unknownServerError: { id: 'fetchStatus.UnknownServerError', defaultMessage: 'Unknown Server Error - please log out and refresh application' },
   invalidRequest: { id: 'fetchStatus.InvalidRequest', defaultMessage: 'Erroneous API use, server validation failed' },
+  duplicateAdd: { id: 'fetchStatus.duplicateAdd', defaultMessage: 'Key values in this request that should be unique are not' },
   otherFetchError: { id: 'fetchStatus.OtherFetchError', defaultMessage: 'Error fetching information from server - please refresh application' }
 })
 
@@ -83,6 +84,8 @@ function checkResponse (httpVerb, response) {
     throw componentText.invalidRequest
   } else if (response.status === 401) {
     throw componentText.invalidCredentials
+  } else if (response.status === 409) {
+    throw componentText.duplicateAdd
   } else if (response.status === 500) {
     throw componentText.unknownServerError
   } else {
@@ -124,22 +127,8 @@ function getApiHeaders (httpMethod, body = undefined) {
   if (typeof document !== 'undefined' && document.cookie) {
     let csrfToken = getCookie('csrf_access_token')
     if (csrfToken) {
-      console.log('Sending header CSRF token: ', csrfToken)
-      if (getCookie('access_token_cookie')) {
-        console.log('Access token cookie = ', getCookie('access_token_cookie'))
-      }
-      if (getCookie('refresh_token_cookie')) {
-        console.log('Refresh token cookie = ', getCookie('access_token_cookie'))
-      }
       result['headers']['X-CSRF-TOKEN'] = csrfToken
-    } else {
-      console.log('Missing csrf_access_token')
-      if (getCookie('csrf_refresh_token')) {
-        console.log('--> We do have a csrf_refresh_token')
-      }
     }
-  } else {
-    console.log('Document object has no cookies')
   }
   return result
 }
@@ -147,6 +136,8 @@ function getApiHeaders (httpMethod, body = undefined) {
 // This function came from one of the answers to a StackOverflow question:
 // https://stackoverflow.com/questions/10730362/get-cookie-by-name
 // Credit to John S.
+// TODO: Test to see if the warnings about unnecessary escapes in
+//       the regex are correct.
 function getCookie (name) {
   function escape (s) {
     return s.replace(/([.*+?\^${}()|\[\]\/\\])/g, '\\$1') 

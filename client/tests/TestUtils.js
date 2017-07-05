@@ -87,8 +87,8 @@ export class TestContainer extends React.Component {
   // Put the Redux state and dispatch method into context
   getChildContext () {
     return {
-      reduxState: undefined,
-      dispatch: undefined
+      reduxState: this.props.state,
+      dispatch: this.props.dispatch
     }
   }
   render () {

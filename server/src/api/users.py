@@ -2,6 +2,7 @@
 import uuid
 from flask import g
 from dm.User import User
+from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import jwt_required
 
 def post(user):
@@ -10,7 +11,7 @@ def post(user):
     # Check if the username is already in use, and if so return an error
     check_user = g.db_session.query(User).filter(User.username == user['username']).one_or_none()
     if check_user is not None:
-        return 'User already exists', 400
+        return 'User already exists', 409
     new_user = User(
         user_id=uuid.uuid4().bytes,
         username=user['username'],
@@ -19,8 +20,11 @@ def post(user):
     if 'preferences' in user:
         new_user.preferences = user['preferences']
     new_user.hash_password(user['password'])
-    g.db_session.add(new_user)
-    g.db_session.commit()
+    try:
+        g.db_session.add(new_user)
+        g.db_session.commit()
+    except IntegrityError:
+        return 'User already exists', 409
     return {'user_id': uuid.UUID(bytes=new_user.user_id)}, 201
 
 @jwt_required

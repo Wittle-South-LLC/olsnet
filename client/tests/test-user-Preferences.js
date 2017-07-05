@@ -15,10 +15,12 @@ chai.use(chaiEnzyme())
 // Set up a default state object in context
 const defaultState = fromJS({
   user: {
-    username: 'Test',
-    user_id: 'A really long UUID string',
-    phone: '9199291234',
-    email: 'test@olsnet.com'
+    current: {
+      username: 'Test',
+      user_id: 'A really long UUID string',
+      phone: '9199291234',
+      email: 'test@olsnet.com'
+    }
   }
 })
 
@@ -26,7 +28,7 @@ describe('Preferences basic render tests', () => {
   it('renders with logged in user', () => {
     const wrapper = shallow(<Preferences />, makeTestContext(defaultState))
     chai.expect(wrapper).to.contain(
-     <p>Preferences for { defaultState.getIn(['user', 'username']) }</p>
+     <p>Preferences page for { defaultState.getIn(['user', 'current', 'username']) }</p>
     )
   })
 })

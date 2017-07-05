@@ -1,9 +1,9 @@
 """login.py - Module to handle /login API endpoint"""
 from flask_jwt_extended import create_access_token, \
-     jwt_required, get_jwt_identity, \
+     jwt_required, \
      create_refresh_token, set_access_cookies, \
-     set_refresh_cookies, current_user
-from flask import g, abort, jsonify, current_app
+     set_refresh_cookies
+from flask import g, abort, jsonify
 from dm.User import User
 
 # Post method for login added 6/27/17 as part of moving from original

@@ -2,6 +2,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { intlShape, defineMessages } from 'react-intl'
+import { getUserName } from '../state/user/user'
 
 export default class Preferences extends React.Component {
   constructor (props, context) {
@@ -14,7 +15,7 @@ export default class Preferences extends React.Component {
     return (
       <div>
         <p>{this.context.intl.formatMessage(this.componentText.pageName)}</p>
-        <p>Preferences for {this.context.reduxState.getIn(['user','username'])}</p>
+        <p>Preferences page for {getUserName(this.context.reduxState.getIn(['user','current']))}</p>
       </div>
     )
   }

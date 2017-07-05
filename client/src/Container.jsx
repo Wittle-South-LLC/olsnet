@@ -16,6 +16,7 @@ import { Grid, Row } from 'react-bootstrap'
 import SiteMenu from './navigation/SiteMenu'
 import { setMessage } from './state/fetchStatus/fetchStatusActions'
 import { intlShape, defineMessages } from 'react-intl'
+import { getUserName, getUserId } from './state/user/user'
 
 /* The following code enables bundle separation and dynamic
    loading. It is baesd on this:
@@ -129,6 +130,8 @@ export default class Container extends React.Component {
                 availableLocales={this.availableLocales}
                 changeLocale={this.props.changeLocale}
                 currentLocale={locale}
+                userId={getUserId(this.state.reduxState.getIn(['user', 'current']))}
+                username={getUserName(this.state.reduxState.getIn(['user', 'current']))}
                 messageType={this.state.reduxState.getIn(['fetchStatus', 'messageType'])}
                 message={this.context.intl.formatMessage(this.state.reduxState.getIn(['fetchStatus', 'message']))}>
         <Grid fluid={true} id="appName">
