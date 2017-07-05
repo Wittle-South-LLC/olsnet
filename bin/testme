@@ -55,6 +55,12 @@ server_running=0
 nose_result=0
 mocha_result=0
 
+# We want to define an environment indicating test
+# Required for JavaScript code coverage to run, and
+# also required to skip real ReCaptcha checks on 
+# the server side
+export NODE_ENV=test
+
 # If we're running any tests, start the API server
 if [ "$run_nose" -gt "0" ] || [ "$run_integration" -gt "0" ]; then
   echo "Starting api server on localhost at port $APPSERVER_HOST_PORT"
@@ -100,7 +106,6 @@ if [ "$run_mocha" -gt "0" ]; then
   if [ "$run_coverage" -eq "1" ]; then
     # Since we're using istanbul in the configuration, NODE_ENV must equal test
     # if we want code coverage
-    export NODE_ENV=test
     export MESSAGE_LEVEL=debug
     eval "cd client; npm run-script cover $mocha_args"
   else

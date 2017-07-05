@@ -38,8 +38,3 @@ class User(Base):
     def verify_password(self, password):
         """Verify password from password string"""
         return pwd_context.verify(password, self.password_hash)
-
-    def generate_auth_token(self, secret_key, expiration=600):
-        """Generate authorization token with an expieration period"""
-        ser = Serializer(secret_key, expires_in=expiration)
-        return ser.dumps({'user_id': self.get_uuid()})
