@@ -25,12 +25,12 @@ var config = {
     // Filename template applies to all chunks, including vendor. Path is
     // prefixed to continue to allow all chunks to be stored in the same
     // directory.
-    filename: 'js/[name].[chunkhash].js',
+    filename: '/js/[name].[chunkhash].js',
     // Chunk plugin suggests that .chunk. should be replace with .[chunkhash]. to
     // assist the browswer with understanding what it can cache. Right now that
     // is a potential future optimization, given how long it took to get this
     // configuration working.
-    chunkFilename: 'js/[id].chunk.js'
+    chunkFilename: '/js/[id].chunk.js'
   },
   // Resolve section helps webpack find code. My specific entries allow
   // import statements to skip including the file extensions.
