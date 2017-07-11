@@ -9,26 +9,23 @@ import { mount } from 'enzyme'
 import sinon from 'sinon'
 import { TestContainer } from './TestUtils.js'
 import { IntlProvider } from 'react-intl'
+import { User } from '../src/state/user/user'
+import { RO_INIT_DATA } from '../src/state/ReduxObject'
 import UserEdit from '../src/user/UserEdit.jsx'
 
 // Set up chai to use Enzyme
 chai.use(chaiEnzyme())
 
 // Set up a default state object in context
-const noUser = fromJS({
-  username: undefined,
-  user_id: undefined,
-  phone: undefined,
-  email: undefined
-})
-const validUser = fromJS({
+const noUser = new User()
+const validUser = new User({ [RO_INIT_DATA]: {
   username: 'Testing',
   password: 'testing0$',
   user_id: undefined,
   phone: '9199294333',
   preferences: {},
   roles: 'User'
-})
+}})
 
 describe('UserEdit basic render tests', () => {
   it('renders with warning class when username is undefined', () => {
@@ -53,7 +50,8 @@ describe('UserEdit basic render tests', () => {
     const mounted = mount(<IntlProvider locale='en'><TestContainer dispatch={dispatchFunc}><UserEdit user={noUser}/></TestContainer></IntlProvider>)
     let userNameInput = mounted.find(FormControl).first()
     userNameInput.simulate('change', { target: { value: 'Testing', id: 'username' } })
-    chai.expect(dispatchFunc.args[0][0]['type']).to.equal('EDIT_USER')
+    chai.expect(dispatchFunc.args[0][0]['type']).to.equal('USER')
+    chai.expect(dispatchFunc.args[0][0]['verb']).to.equal('EDIT')
   })
 /* Removed 7/4/17 - Unable to set reCaptcha value on the component, so unable to test a successful submit
   it('updates state when value of password2 changes', () => {

@@ -2,11 +2,10 @@
 import { combineReducers } from 'redux-immutable'
 import { fetchStatus } from './fetchStatus/fetchStatusReducer'
 // import { testStuff } from './testStuff/testStuffReducer'
-import { user } from './user/userReducer'
+import { user } from './user/user'
 
 const baseApp = combineReducers({
   fetchStatus,
-//  testStuff,
   user
 })
 

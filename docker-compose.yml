@@ -42,6 +42,7 @@ services:
       - SERVER_COMMAND
       - COVERAGE_FILE
       - NODE_ENV
+      - FLASK_DEBUG
     # Allow tests to run directly against app server and not
     # through proxy (not sure this will be needed)
     expose:

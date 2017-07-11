@@ -16,7 +16,7 @@ import { Grid, Row } from 'react-bootstrap'
 import SiteMenu from './navigation/SiteMenu'
 import { setMessage } from './state/fetchStatus/fetchStatusActions'
 import { intlShape, defineMessages } from 'react-intl'
-import { getUserName, getUserId } from './state/user/user'
+import { getCurrentUser } from './state/user/user'
 
 /* The following code enables bundle separation and dynamic
    loading. It is baesd on this:
@@ -55,6 +55,7 @@ export default class Container extends React.Component {
     this.componentText = defineMessages({
       navHomeLink: { id: 'container.home_link', defaultMessage: 'Home' },
       navUserLink: { id: 'container.user_link', defaultMessage: 'Preferences' },
+      navAdminLink: { id: 'container.admin_link', defaultMessage: 'Admin' },
       enLocaleDesc: { id: 'container.en_locale_description', defaultMessage: 'English' },
       frLocaleDesc: { id: 'container.fr_locale_description', defaultMessage: 'French' },
       containerGreetingStatus: {
@@ -73,7 +74,17 @@ export default class Container extends React.Component {
     this.state = {
       reduxState: props.store.getState()
     }
+
+    // Define the basic set of navigation options independent of current user role or
+    // current locale. We will filter by user role and set label by locale in init(),
+    // which is called at each render.
+    this.baseNavOptions = [
+      { path: '/home', class: 'home', role: undefined, label_id: this.componentText.navHomeLink },
+      { path: '/user', class: 'user', role: 'User', label_id: this.componentText.navUserLink },
+      { path: '/admin', class: 'user', role: 'Admin', label_id: this.componentText.navAdminLink }
+    ]
     this.currentLocale = props.getCurrentLocale()
+    this.currentUser = getCurrentUser(this.state.reduxState)
     this.init()
   }
   // Put the Redux state and dispatch method into context
@@ -92,10 +103,12 @@ export default class Container extends React.Component {
 
     // Define the site-level navigation options that correspond to the routes shown above; needs to be done
     // in render because locales can change
-    this.navOptions = [
-      { path: '/home', class: 'home', label: this.context.intl.formatMessage(this.componentText.navHomeLink) },
-      { path: '/user', class: 'user', label: this.context.intl.formatMessage(this.componentText.navUserLink) }
-    ]
+    let myUser = getCurrentUser(this.state.reduxState)
+    this.navOptions = this.baseNavOptions.filter((option) => option.role === undefined || myUser.hasRole(option.role))
+                                         .map((option) => {
+                                           option.label = this.context.intl.formatMessage(option.label_id)
+                                           return option
+                                         })
   }
   // After Container mounts initially, subscribe to store updates
   // and save the unsubscribe callback for when the component is
@@ -120,8 +133,10 @@ export default class Container extends React.Component {
   // Render the container and its children
   render () {
     let locale = this.props.getCurrentLocale()
-    if (locale !== this.currentLocale) {
+    let myUser = getCurrentUser(this.state.reduxState)
+    if (locale !== this.currentLocale || myUser !== this.currentUser) {
       this.currentLocale = locale
+      this.currentUser = myUser
       this.init()
     }
     return (
@@ -130,15 +145,15 @@ export default class Container extends React.Component {
                 availableLocales={this.availableLocales}
                 changeLocale={this.props.changeLocale}
                 currentLocale={locale}
-                userId={getUserId(this.state.reduxState.getIn(['user', 'current']))}
-                username={getUserName(this.state.reduxState.getIn(['user', 'current']))}
+                userId={myUser.getUserId()}
+                username={myUser.getUserName()}
                 messageType={this.state.reduxState.getIn(['fetchStatus', 'messageType'])}
                 message={this.context.intl.formatMessage(this.state.reduxState.getIn(['fetchStatus', 'message']))}>
         <Grid fluid={true} id="appName">
           <Row>
             <Switch>
               <Route path={'/home'} component={Home} />
-              <Route path={'/user'} component={Preferences} />
+              <Route path={'/user'} component={Preferences}/>
             </Switch>
           </Row>
         </Grid>

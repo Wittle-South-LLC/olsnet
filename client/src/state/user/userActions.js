@@ -1,34 +1,37 @@
 /* userActions.js - User actions */
-import { fetchReduxAction, handleDoubleClick } from '../fetchStatus/fetchStatusActions'
-import { getUserName, getUserEmail, getUserPhone,
-         getUserPreferences, getUserRoles, getUserPassword } from './user'
+import { defineMessages } from 'react-intl'
+import { VERB_NEW, VERB_EDIT, VERB_CREATE, VERB_UPDATE,
+         VERB_DELETE, VERB_LIST, VERB_LOGIN, VERB_LOGOUT, VERB_HYDRATE,
+         fetchReduxAction, handleDoubleClick } from '../fetchStatus/fetchStatusActions'
+import { USER, getCurrentUser } from './user'
 
-export const CREATE_USER = 'CREATE_USER'
-export const EDIT_USER = 'EDIT_USER'
-export const LOGIN_USER = 'LOGIN_USER'
-export const HYDRATE_APP = 'HYDRATE_APP'
-export const REGISTER_USER = 'REGISTER_USER'
-export const LOOKUP_USER = 'LOOKUP_USER'
-export const LOGOUT_USER = 'LOGOUT_USER'
-export const LIST_USERS = 'LIST_USERS'
+export const componentText = defineMessages({
+  userLogout: { id: 'userActions.userLogout', defaultMessage: 'Logged out successfully' },
+  userLogin: { id: 'userActions.userLogin', defaultMessage: 'Welcome!' },
+  userUpdated: { id: 'userActions.userUpdated', defaultMessage: 'Your information was updated' },
+  userCreated: { id: 'userReducer.userCreated', defaultMessage: 'Registration completed, please log in' }
+})
 
 export function createUser () {
-  return { type: CREATE_USER }
+  return { type: USER, verb: VERB_NEW }
 }
 
 export function editUserField (fieldName, fieldValue) {
-  return { type: EDIT_USER, fieldName, fieldValue }
+  return { type: USER, verb: VERB_EDIT, fieldName, fieldValue }
 }
 
 // Should login in a user and populate the user section of state
-export function loginUser (username, password, nextPath = undefined) {
+export function loginUser (nextPath = undefined) {
   return (dispatch, getState) => {
-    if (!getState().hasIn(['user', 'fetchingUser'])) {
+    let myUser = getCurrentUser(getState())
+    if (!myUser.fetching) {
       let payload = {
         apiUrl: '/login',
         method: 'POST',
-        type: LOGIN_USER,
-        sendData: { username, password }
+        type: USER,
+        verb: VERB_LOGIN,
+        successMsg: componentText.userLogin,
+        sendData: { username: myUser.getUserName(), password: myUser.getUserPassword() }
       }
       return dispatch(fetchReduxAction(payload, nextPath))
     } else return handleDoubleClick(dispatch, nextPath)
@@ -39,11 +42,12 @@ export function loginUser (username, password, nextPath = undefined) {
 // logged in (has an access token cookie)
 export function hydrateApp (nextPath = undefined) {
   return (dispatch, getState) => {
-    if (!getState().hasIn(['user', 'fetchingUser'])) {
+    if (!getCurrentUser(getState()).fetching) {
       let payload = {
         apiUrl: '/login',
         method: 'GET',
-        type: HYDRATE_APP,
+        type: USER,
+        verb: VERB_HYDRATE,
         sendData: {}
       }
       return dispatch(fetchReduxAction(payload, nextPath))
@@ -51,22 +55,69 @@ export function hydrateApp (nextPath = undefined) {
   }
 }
 
-export function registerUser (reCaptchaResponse, nextPath = undefined) {
+export function registerUser (nextPath = undefined) {
   return (dispatch, getState) => {
-    if (!getState().hasIn(['user', 'fetchingUser'])) {
-      let myUser = getState().getIn(['user', 'current'])
+    let myUser = getCurrentUser(getState())
+    if (!myUser.fetching && myUser.new) {
       let payload = {
         apiUrl: '/users',
         method: 'POST',
-        type: REGISTER_USER,
+        type: USER,
+        verb: VERB_CREATE,
+        successMsg: componentText.userCreated,
         sendData: {
-          username: getUserName(myUser),
-          email: getUserEmail(myUser),
-          phone: getUserPhone(myUser),
-          preferences: getUserPreferences(myUser).toJS(),
-          roles: getUserRoles(myUser),
-          password: getUserPassword(myUser),
-          reCaptchaResponse }
+          username: myUser.getUserName(),
+          email: myUser.getUserEmail(),
+          phone: myUser.getUserPhone(),
+          preferences: myUser.getUserPreferences().toJS(),
+          roles: myUser.getUserRoles(),
+          password: myUser.getUserPassword(),
+          reCaptchaResponse: myUser.getReCaptchaResponse()
+        }
+      }
+      return dispatch(fetchReduxAction(payload, nextPath))
+    } else return handleDoubleClick(dispatch, nextPath)
+  }
+}
+
+// TODO: Determine if this function needs an isFetching check
+// prior to issuing the payload. If so, it will be checking
+// for a user in a list, since you cannot delete the current
+// user
+export function deleteUser (username, nextPath = undefined) {
+  return (dispatch, getState) => {
+    let payload = {
+      apiUrl: '/users/' + username,
+      method: 'DELETE',
+      type: USER,
+      verb: VERB_DELETE,
+      sendData: { username }
+    }
+    return dispatch(fetchReduxAction(payload, nextPath))
+  }
+}
+
+export function updateUser (nextPath = undefined) {
+  return (dispatch, getState) => {
+    let myUser = getCurrentUser(getState())
+    if (!myUser.fetching && myUser.dirty) {
+      let payload = {
+        apiUrl: '/users/' + myUser.getUserName(),
+        method: 'PUT',
+        type: USER,
+        verb: VERB_UPDATE,
+        successMsg: componentText.userUpdated,
+        sendData: {
+          username: myUser.getUserName(),
+          password: myUser.getUserPassword(),
+          email: myUser.getUserEmail(),
+          phone: myUser.getUserPhone(),
+          preferences: myUser.getUserPreferences().toJS(),
+          roles: myUser.getUserRoles()
+        }
+      }
+      if (myUser.getNewPassword()) {
+        payload.sendData['newPassword'] = myUser.getNewPassword()
       }
       return dispatch(fetchReduxAction(payload, nextPath))
     } else return handleDoubleClick(dispatch, nextPath)
@@ -77,11 +128,13 @@ export function registerUser (reCaptchaResponse, nextPath = undefined) {
 // action to clear session cookies
 export function logoutUser (nextPath = '/home') {
   return (dispatch, getState) => {
-    if (!getState().hasIn(['user', 'fetchingUser'])) {
+    if (!getCurrentUser(getState()).fetching) {
       let payload = {
         apiUrl: '/logout',
         method: 'POST',
-        type: LOGOUT_USER,
+        type: USER,
+        verb: VERB_LOGOUT,
+        successMsg: componentText.userLogout,
         sendData: {}
       }
       return dispatch(fetchReduxAction(payload, nextPath))
@@ -98,7 +151,8 @@ export function listUsers (nextPath = undefined) {
       let payload = {
         apiUrl: '/users',
         method: 'GET',
-        type: LIST_USERS
+        type: USER,
+        verb: VERB_LIST
       }
       return dispatch(fetchReduxAction(payload, nextPath))
     } else return handleDoubleClick(dispatch, nextPath)

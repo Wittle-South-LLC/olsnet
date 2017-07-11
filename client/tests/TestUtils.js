@@ -2,7 +2,10 @@
 import { is } from 'immutable'
 import React from 'react'
 import PropTypes from 'prop-types'
-var diff = require('immutablediff')
+var diff = require('deep-diff').diff
+// var diff = require('immutablediff')
+
+const filterDiff = (path, key) => key === '_hashCode'
 
 // Goal here is to check to see if two given immutable objects are identical
 // using stock is function, and if not automatically log the differences
@@ -10,8 +13,8 @@ export function isd (from, to) {
   let result = is(from, to)
   if (!result) {
     try {
-      let d = diff(from, to)
-      console.log(d.toJS())
+      let d = diff(from.toJS(), to.toJS(), filterDiff)
+      console.log(d)
     } catch (e) {
       console.log('TestUtils NOTE: Caught exception in diff', e, result)
       console.log('from = ', from.toJS())
@@ -30,13 +33,17 @@ export function testAsync (store, firstState, secondState, done) {
   let firstUpdate = true
   let unsubscribe = store.subscribe(() => {
     if (firstUpdate) {
-      if (!isd(store.getState(), firstState)) {
+      if (firstState && !isd(store.getState(), firstState)) {
+//        console.log('First store.getState() = ', JSON.stringify(store.getState().toJS(), null, 2))
+//        console.log('firstState = ', JSON.stringify(firstState.toJS(), null, 2))
         done(new Error('Difference in FETCH_START - check inline'))
       }
       firstUpdate = false
     } else {
       unsubscribe()
       if (!isd(store.getState(), secondState)) {
+//        console.log('store.getState() = ', JSON.stringify(store.getState().toJS(), null, 2))
+//        console.log('secondState = ', JSON.stringify(secondState.toJS(), null, 2))
         done(new Error('Difference in completed fetch - check inline'))
       } else {
         done()

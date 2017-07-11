@@ -1,9 +1,8 @@
 """User.py - Module containing the user classes for the data model"""
 import uuid
-from sqlalchemy import Column, String, Integer, JSON
+from sqlalchemy import Column, String, JSON
 from sqlalchemy.dialects.mysql import BINARY
 from passlib.apps import custom_app_context as pwd_context
-from itsdangerous import (TimedJSONWebSignatureSerializer as Serializer)
 from .base import Base
 
 class User(Base):
@@ -16,6 +15,7 @@ class User(Base):
     phone = Column(String(20), index=True, unique=True)
     password_hash = Column(String(128))
     preferences = Column(JSON)
+    roles = Column(String(120))
 
     def get_uuid(self):
         """Returns the text version of the UUID, the binary version is stored in the database"""
@@ -24,11 +24,11 @@ class User(Base):
     def dump(self):
         """Returns dictionary of fields and values"""
         ret = {}
-        for k, v in vars(self).items():
-            if k == 'user_id':
-                ret[k] = self.get_uuid()
-            elif not (k.startswith('_') or k == 'password_hash'):
-                ret[k] = v
+        for key, value in vars(self).items():
+            if key == 'user_id':
+                ret[key] = self.get_uuid()
+            elif not (key.startswith('_') or key == 'password_hash'):
+                ret[key] = value
         return ret
 
     def hash_password(self, password):
