@@ -1,9 +1,22 @@
 """Module to handle /login API endpoint"""
 import uuid
-from flask import g
+import os.path
+import requests
+from flask import g, current_app, request
 from dm.User import User
 from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import jwt_required
+
+# API constants for Google ReCaptcha APIs
+RECAPTCHA_URL = 'https://www.google.com/recaptcha/api/siteverify'
+RECAPTCHA_KEY = '6LcUlxgUAAAAAK5wC6dv6XEcJFvtIbmJsFwyE3Hb'
+API_RECAPTCHA_FAILS = 'ReCaptcha check failed'
+
+# We need to be able to mock the recaptcha check if we're running
+# in unit test mode (NODE_ENV='test').
+if 'NODE_ENV' in os.environ and os.environ['NODE_ENV'] == 'test':
+    print('We are running in test mode, ReCaptcha checks will be mocked')
+    import requests_mock
 
 def post(user):
     """Method to handle POST verb for /user enpoint"""
@@ -12,11 +25,30 @@ def post(user):
     check_user = g.db_session.query(User).filter(User.username == user['username']).one_or_none()
     if check_user is not None:
         return 'User already exists', 409
+    # Confirm ReCaptcha is valid
+    if 'NODE_ENV' in os.environ and os.environ['NODE_ENV'] == 'test':
+        with requests_mock.Mocker(real_http=True) as mock:
+            mock.post(RECAPTCHA_URL, json={'success': True})
+            resp = requests.post(RECAPTCHA_URL, data={
+                'secret': RECAPTCHA_KEY,
+                'response': user['reCaptchaResponse'],
+                'remoteip': request.remote_addr})
+    else:
+        resp = requests.post(RECAPTCHA_URL, data={
+            'secret': RECAPTCHA_KEY,
+            'response': user['reCaptchaResponse'],
+            'remoteip': request.remote_addr})
+    current_app.logger.debug('Google Post Response Status: ' + str(resp.status_code))
+    current_app.logger.debug('Google Post Response JSON: ' + str(resp.json()))
+    if resp.status_code >= 400 or not resp.json()['success']:
+        return API_RECAPTCHA_FAILS, 401
+    current_app.logger.debug('user = ' + str(user))
     new_user = User(
         user_id=uuid.uuid4().bytes,
         username=user['username'],
         email=user['email'],
-        phone=user['phone'])
+        phone=user['phone'],
+        roles=user['roles'])
     if 'preferences' in user:
         new_user.preferences = user['preferences']
     new_user.hash_password(user['password'])
@@ -40,10 +72,40 @@ def search():
 
 @jwt_required
 def delete(username):
-    """Method to handle DELETE verb for /users/{username} endpoing"""
+    """Method to handle DELETE verb for /users/{username} endpoint"""
     delete_user = g.db_session.query(User).filter(User.username == username).one_or_none()
     if not delete_user:
         return ('Not found', 404)
     g.db_session.delete(delete_user)
     g.db_session.commit()
     return 'User deleted', 204
+
+@jwt_required
+def put(username, user):
+    """Method to handle PUT verb for /users/{username} endpoint"""
+    update_user = g.db_session.query(User).filter(User.username == username).one_or_none()
+    if not update_user:
+        return ('Requested user not found', 404)
+    if not g.user.verify_password(user['password']):
+        current_app.logger.debug('/users PUT: rejected missing current password')
+        return ('You must provide current password with a user update', 401)
+    if update_user.username != g.user.username and not 'Admin' in g.user.roles:
+        current_app.logger.debug('/users PUT: rejected update to %s by %s with roles %s' %\
+                                 (username, g.user.username, g.user.roles))
+        return ('You are not authorized to modify this user', 401)
+    for key, value in user.items():
+        if key != 'password' and key != 'newPassword':
+            setattr(update_user, key, value)
+        elif key == 'newPassword':
+            update_user.hash_password(value)
+    g.db_session.add(update_user)
+    g.db_session.commit()
+    return 'User updated', 200
+
+@jwt_required
+def get(username):
+    """Handles GET verb for /users/{username} endpoint"""
+    find_user = g.db_session.query(User).filter(User.username == username).one_or_none()
+    if not find_user:
+        return ('Not found', 404)
+    return find_user.dump(), 200

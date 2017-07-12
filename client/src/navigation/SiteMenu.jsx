@@ -58,7 +58,7 @@ export default class SiteMenu extends React.Component {
     let menuOptions = this.props.navOptions
       ? this.props.navOptions.map((option) =>
         <li key={option.path} className={option.class}>
-          <a className={option.path === this.state.activePath ? 'active' : undefined}
+          <a id={option.id} className={option.path === this.state.activePath ? 'active' : undefined}
              onClick={this.onMenuClick.bind(undefined, option.path)}>{option.label}</a>
         </li>)
       : []
@@ -67,18 +67,18 @@ export default class SiteMenu extends React.Component {
           <span className='titleor'>
             {this.context.intl.formatMessage(this.componentText.welcomeText, {username: this.props.username})}
           </span>
-          <span onClick={this.onLogoutClick} className='titlelink'>
+          <span id='logoutLink' onClick={this.onLogoutClick} className='titlelink'>
             {this.context.intl.formatMessage(this.componentText.logoutText)}
           </span>
         </div>
       : <div className='notLoggedIn'>
-          <span onClick={this.onSignInClick} className='titlelink'>
+          <span id='loginLink' onClick={this.onSignInClick} className='titlelink'>
             {this.context.intl.formatMessage(this.componentText.signInText)}
           </span>
           <span className='titleor'>
             {this.context.intl.formatMessage(this.componentText.orText)}
           </span>
-          <span onClick={this.onRegisterClick} className='titlelink'>
+          <span id='registerLink' onClick={this.onRegisterClick} className='titlelink'>
            {this.context.intl.formatMessage(this.componentText.registerText)}
           </span>
         </div>
@@ -90,7 +90,7 @@ export default class SiteMenu extends React.Component {
             {menuOptions}
           </ul>
         </div>
-        <div className={this.state.contentClass}>
+        <div id='menuBar' className={this.state.contentClass}>
           <div className='titlebarRight'>
             <select className="languageSelect" onChange={this.props.changeLocale} value={this.props.currentLocale}>
               {this.props.availableLocales.map((locale) =>
@@ -99,7 +99,7 @@ export default class SiteMenu extends React.Component {
             </select>
             {userHeader}
           </div>
-          <a className="button" onClick={this.onMenuToggle}></a>
+          <a className="button" id='menuToggle' onClick={this.onMenuToggle}></a>
           <span className='appTitle'>{this.props.title}</span>
           <div className={'appMessage ' + this.props.messageType}>
             {this.props.message}
@@ -113,7 +113,6 @@ export default class SiteMenu extends React.Component {
 
 SiteMenu.contextTypes = {
   dispatch: PropTypes.func,
-  reduxState: PropTypes.object,
   router: PropTypes.object,
   intl: intlShape
 }

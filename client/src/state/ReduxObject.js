@@ -8,57 +8,48 @@
    - fetching => Server operation on this object is in process
 */
 
-import { Map } from 'immutable'
+export const RO_COPY_FROM = 'copyFrom'
+export const RO_INIT_DATA = 'initData'
+const MAX_HASH_CODE = 199999999
 
-// Define constant dictionary keys for meta object
-export const RO_META = '_meta'
-export const RO_DIRTY = 'dirty'
-export const RO_NEW = 'new'
-export const RO_FETCHING = 'fetching'
-
-// Provide a new meta object as a component for a Redux domain object
-function newMeta () {
-  return Map({}).set(RO_DIRTY, false)
-                .set(RO_NEW, false)
-                .set(RO_FETCHING, false)
-}
-
-// Add new meta object to a provided domain object
-export function addMeta (reduxObj) {
-  return reduxObj.set(RO_META, newMeta())
-}
-
-// Remove a meta object from a provided domain object
-export function deleteMeta (reduxObj) {
-  return reduxObj.delete(RO_META)
-}
-
-// Return a new Redux object with its dirty state updated
-export function setDirty (reduxObj, newState) {
-  return reduxObj.setIn([RO_META, RO_DIRTY], newState)
-}
-
-// Return a new Redux object with its new state updated
-export function setFetching (reduxObj, newState) {
-  return reduxObj.setIn([RO_META, RO_FETCHING], newState)
-}
-
-// Return a new Redux object with its new state updated
-export function setNew (reduxObj, newState) {
-  return reduxObj.setIn([RO_META, RO_NEW], newState)
-}
-
-// Test if redux object is dirty
-export function isDirty (reduxObj) {
-  return reduxObj.getIn([RO_META, RO_DIRTY])
-}
-
-// Test if redux object is being fetched
-export function isFetching (reduxObj) {
-  return reduxObj.getIn([RO_META, RO_FETCHING])
-}
-
-// Test if redux object is new
-export function isNew (reduxObj) {
-  return reduxObj.getIn([RO_META, RO_NEW])
+export class ReduxObject {
+  constructor (paramObj) {
+    this.fetching = paramObj && paramObj.hasOwnProperty(RO_COPY_FROM) ? paramObj.copyFrom.fetching : false
+    this.new = paramObj && paramObj.hasOwnProperty(RO_COPY_FROM) ? paramObj.copyFrom.new : false
+    this.dirty = paramObj && paramObj.hasOwnProperty(RO_COPY_FROM) ? paramObj.copyFrom.dirty : false
+    this._hashCode = Math.floor(Math.random() * MAX_HASH_CODE)
+  }
+  hashCode () {
+    return this._hashCode
+  }
+  equals (obj) {
+    if (obj.hashCode() === this._hashCode) { return true }
+    if (obj.new === this.new &&
+        obj.dirty === this.dirty &&
+        obj.fetching === this.fetching) { return true }
+  }
+  // Returns a copy of this instance with new set to false
+  clearNew () {
+    return this.new ? Object.assign(new this.constructor({[RO_COPY_FROM]: this}), {new: false}) : this
+  }
+  // Returns a copy of this instance with dirty set to false
+  clearDirty () {
+    return this.dirty ? Object.assign(new this.constructor({[RO_COPY_FROM]: this}), {dirty: false}) : this
+  }
+  // Returns a copy of this instance with fetching set to false
+  clearFetching () {
+    return this.fetching ? Object.assign(new this.constructor({[RO_COPY_FROM]: this}), {fetching: false}) : this
+  }
+  // Returns a copy of this instance with new set to true
+  setNew () {
+    return !this.new ? Object.assign(new this.constructor({[RO_COPY_FROM]: this}), {new: true}) : this
+  }
+  // Returns a copy of this instance with dirty set to true
+  setDirty () {
+    return !this.dirty ? Object.assign(new this.constructor({[RO_COPY_FROM]: this}), {dirty: true}) : this
+  }
+  // Returns a copy of this instance with fetching set to true
+  setFetching () {
+    return !this.fetching ? Object.assign(new this.constructor({[RO_COPY_FROM]: this}), {fetching: true}) : this
+  }
 }

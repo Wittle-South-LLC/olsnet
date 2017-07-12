@@ -2,10 +2,24 @@
 import fetch from 'isomorphic-fetch'
 import { defineMessages } from 'react-intl'
 
-export const PRE_FETCH = 'PRE_FETCH'
+// Verb constants
+export const VERB_NEW = 'NEW'
+export const VERB_EDIT = 'EDIT'
+export const VERB_CREATE = 'CREATE'
+export const VERB_READ = 'READ'
+export const VERB_UPDATE = 'UPDATE'
+export const VERB_DELETE = 'DELETE'
+export const VERB_LIST = 'LIST'
+export const VERB_LOGIN = 'LOGIN'
+export const VERB_LOGOUT = 'LOGOUT'
+export const VERB_HYDRATE = 'HYDRATE'
+
+// Fetch status constants
 export const FETCH_START = 'FETCH_START'
 export const FETCH_SUCCESS = 'FETCH_SUCCESS'
 export const FETCH_ERROR = 'FETCH_ERROR'
+
+// Other fetch action constants
 export const SET_MESSAGE = 'SET_MESSAGE'
 export const TRANSITION_TO = 'TRANSITION_TO'
 
@@ -38,7 +52,7 @@ export function setNewPath (newPath) {
 
 export function fetchReduxAction (payload, successPath = undefined) {
   return (dispatch, getState) => {
-    dispatch(fetchStart(payload.type, payload.sendData))
+    dispatch(fetchStart(payload.type, payload.verb, payload.sendData))
     let headers
     switch (payload.method) {
       /* GET does not have payloads */
@@ -65,8 +79,8 @@ export function fetchReduxAction (payload, successPath = undefined) {
                     navigator.userAgent === 'node.js')) ? 'http://localhost:' + process.env.WEBSERVER_HOST_PORT : ''
     return fetch(baseUrl + '/api/v1' + payload.apiUrl, headers)
       .then(response => checkResponse(payload.method, response))
-      .then(json => dispatch(fetchSuccess(payload.type, payload.sendData, json, successPath)))
-      .catch(error => dispatch(fetchError(payload.type, payload.sendData, error)))
+      .then(json => dispatch(fetchSuccess(payload, json, successPath)))
+      .catch(error => dispatch(fetchError(payload, error)))
   }
 }
 
@@ -94,18 +108,32 @@ function checkResponse (httpVerb, response) {
 }
 
 /* Redux action for all fetch starts */
-function fetchStart (type, sendData) {
-  return { type, status: FETCH_START, sendData }
+function fetchStart (type, verb, sendData) {
+  return { type, verb, status: FETCH_START, sendData }
 }
 
 /* Redux action for all fetch errors */
-function fetchError (type, sendData, message) {
-  return { type, status: FETCH_ERROR, sendData, message }
+function fetchError (payload, message) {
+  return {
+    type: payload.type,
+    verb: payload.verb,
+    status: FETCH_ERROR,
+    sendData: payload.sendData,
+    message
+  }
 }
 
 /* Redux action for all fetch successes */
-function fetchSuccess (type, sendData, receivedData, nextPath) {
-  return { type, status: FETCH_SUCCESS, sendData, receivedData, nextPath }
+function fetchSuccess (payload, receivedData, nextPath) {
+  return {
+    type: payload.type,
+    verb: payload.verb,
+    status: FETCH_SUCCESS,
+    sendData: payload.sendData,
+    successMsg: payload.successMsg,
+    receivedData,
+    nextPath
+  }
 }
 
 /* Construct the payload argument to fetch given the HTTP method,

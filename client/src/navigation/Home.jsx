@@ -3,6 +3,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { Switch, Route } from 'react-router-dom'
 import { intlShape, defineMessages } from 'react-intl'
+import { getCurrentUser } from '../state/user/user'
 import Login from '../user/Login'
 // import Register from '../user/Register'
 import UserEdit from '../user/UserEdit'
@@ -18,9 +19,12 @@ export default class Home extends React.Component {
     return (
       <div>
         <Switch>
-          <Route path={'/home/login'} component={Login} />
+          <Route path={'/home/login'} render={() => (
+            <Login user={getCurrentUser(this.context.reduxState)} />)}
+          />
           <Route path={'/home/register'} render={() => (
-            <UserEdit user={this.context.reduxState.getIn(['user', 'current'])} />)} />
+            <UserEdit user={getCurrentUser(this.context.reduxState)} />)}
+          />
         </Switch>
         <p>{this.context.intl.formatMessage(this.componentText.pageName)}</p>
       </div>

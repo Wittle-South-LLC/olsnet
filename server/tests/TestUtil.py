@@ -16,6 +16,13 @@ def set_csrf_token(token):
     global csrf_token
     csrf_token = token
 
+def clear_csrf_token():
+    """Clears the current CSRF token and returns it (for safekeeping)"""
+    global csrf_token
+    ret = csrf_token
+    csrf_token = None
+    return ret
+
 def log_response_error(resp):
     """Shared method for logging response errors"""
     if resp.status_code >= 400:
@@ -29,6 +36,7 @@ def get_response_with_jwt(test_session, method, url, payload=None):
     if method == 'PUT' or method == 'POST':
         args['json'] = payload
     if test_session and csrf_token:
+        LOGGER.debug('get_response_with_JWT setting session CSRF token to: ' + str(csrf_token))
         args['headers'] = {'X-CSRF-TOKEN': csrf_token}
     LOGGER.debug('args = ' + str(args))
     if method == 'GET':

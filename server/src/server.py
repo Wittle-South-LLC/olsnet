@@ -17,8 +17,14 @@ OTHER_PRECHECK_401 = 'Other 401 response'
 # Get the spec file from the environment variable
 OPENAPI_SPEC = os.environ['OPENAPI_SPEC']
 
+# Set up Connexion for debugging based on FLASK_DEBUG environment variable
+if 'FLASK_DEBUG' in os.environ and int(os.environ['FLASK_DEBUG']) == 1:
+    DEBUG_APP = True
+else:
+    DEBUG_APP = False
+
 # Create the connextion-based Flask app, and tell it where to look for API specs
-APP = connexion.FlaskApp(__name__, specification_dir='swagger/', swagger_json=True)
+APP = connexion.FlaskApp(__name__, specification_dir='swagger/', swagger_json=True, debug=DEBUG_APP)
 FAPP = APP.app
 # JWT implementation
 JWT = JWTManager(FAPP)
@@ -137,4 +143,4 @@ def ping_connection(connection, branch):
         connection.should_close_with_result = save_should_close_with_result
 
 # Start the app
-APP.run(host='0.0.0.0', port=APPSERVER_PORT)
+APP.run(host='0.0.0.0', port=int(APPSERVER_PORT))

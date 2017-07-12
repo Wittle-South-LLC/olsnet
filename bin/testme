@@ -55,6 +55,21 @@ server_running=0
 nose_result=0
 mocha_result=0
 
+# If we're not running code coverage, run flask in debug
+# mode. Debug mode screws up code coverage, and I'm not
+# going to spend the time right now to find out why (7/10/17).
+if [ "$run_coverage" -gt "0" ]; then
+  export FLASK_DEBUG=0
+else
+  export FLASK_DEBUG=1
+fi
+
+# We want to define an environment indicating test
+# Required for JavaScript code coverage to run, and
+# also required to skip real ReCaptcha checks on 
+# the server side
+export NODE_ENV=test
+
 # If we're running any tests, start the API server
 if [ "$run_nose" -gt "0" ] || [ "$run_integration" -gt "0" ]; then
   echo "Starting api server on localhost at port $APPSERVER_HOST_PORT"
@@ -74,7 +89,7 @@ fi
 
 # If we're running the server, then add the testing user
 if [ "$server_running" -gt "0" ]; then
-  export ADD_USER=$(curl -H "Content-Type: application/json" -X POST -d '{"username": "testing", "password":"testing0", "email": "test@wittle.net", "phone": "9199999999", "reCaptchaResponse": "Nothing"}' http://localhost:8081/api/v1/users)
+  export ADD_USER=$(curl -H "Content-Type: application/json" -X POST -d '{"username": "testing", "password":"testing0", "email": "test@wittle.net", "phone": "9199999999", "roles": "Admin", "reCaptchaResponse": "Nothing"}' http://localhost:8081/api/v1/users)
   echo "Add User returned $ADD_USER"
 fi
 
@@ -100,7 +115,6 @@ if [ "$run_mocha" -gt "0" ]; then
   if [ "$run_coverage" -eq "1" ]; then
     # Since we're using istanbul in the configuration, NODE_ENV must equal test
     # if we want code coverage
-    export NODE_ENV=test
     export MESSAGE_LEVEL=debug
     eval "cd client; npm run-script cover $mocha_args"
   else

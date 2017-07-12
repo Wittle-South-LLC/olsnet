@@ -2,7 +2,8 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { intlShape, defineMessages } from 'react-intl'
-import { getUserName } from '../state/user/user'
+import { getCurrentUser } from '../state/user/user'
+import UserEdit from './UserEdit'
 
 export default class Preferences extends React.Component {
   constructor (props, context) {
@@ -12,10 +13,12 @@ export default class Preferences extends React.Component {
     })
   }
   render () {
+    let user = getCurrentUser(this.context.reduxState)
     return (
       <div>
+        { user.getUserId() && <UserEdit user={user} /> }
         <p>{this.context.intl.formatMessage(this.componentText.pageName)}</p>
-        <p>Preferences page for {getUserName(this.context.reduxState.getIn(['user','current']))}</p>
+        <p>Preferences page for {user.getUserName()}</p>
       </div>
     )
   }

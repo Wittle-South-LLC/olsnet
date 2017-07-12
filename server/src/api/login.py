@@ -19,7 +19,7 @@ def post(login_data):
     # Look up the user and verify that the password is correct
     user = g.db_session.query(User).filter(User.username == username).one_or_none()
     if not user or not user.verify_password(password):
-        abort(404, 'Invalid Username/Password Combination')
+        abort(401, 'Invalid Username/Password Combination')
 
     # Ensure the user data model object is available in the Flask global object
     g.user = user
