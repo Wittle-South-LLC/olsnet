@@ -1,10 +1,5 @@
-/* test-navigation-Home.js - Tests the Home page
-   Currently this is using render(), which is not ideal in my opinion,
-   as I'll need to test for the rendered HTML. I need to either find
-   a way to get shallow() working with react-router-4, or get mount()
-   working so that I can test for react components rather than HTML */
+/* test-navigation-Home.js - Tests the Home page */
 import React from 'react'
-// import PropTypes from 'prop-types'
 import { Map } from 'immutable'
 import { MemoryRouter } from 'react-router-dom'
 import { IntlProvider } from 'react-intl'
@@ -14,7 +9,6 @@ import chaiEnzyme from 'chai-enzyme'
 import { mount } from 'enzyme'
 import { User } from '../src/state/user/user'
 import { RO_INIT_DATA } from '../src/state/ReduxObject'
-// import sinon from 'sinon'
 import { TestContainer } from './TestUtils.js'
 import Home from '../src/navigation/Home.jsx'
 

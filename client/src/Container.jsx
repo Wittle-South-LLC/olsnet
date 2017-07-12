@@ -79,9 +79,9 @@ export default class Container extends React.Component {
     // current locale. We will filter by user role and set label by locale in init(),
     // which is called at each render.
     this.baseNavOptions = [
-      { path: '/home', class: 'home', role: undefined, label_id: this.componentText.navHomeLink },
-      { path: '/user', class: 'user', role: 'User', label_id: this.componentText.navUserLink },
-      { path: '/admin', class: 'user', role: 'Admin', label_id: this.componentText.navAdminLink }
+      { path: '/home', id: 'navlinkHome', class: 'home', role: undefined, label_id: this.componentText.navHomeLink },
+      { path: '/user', id: 'navlinkUser', class: 'user', role: 'User', label_id: this.componentText.navUserLink },
+      { path: '/admin', id: 'navlinkAdmin', class: 'user', role: 'Admin', label_id: this.componentText.navAdminLink }
     ]
     this.currentLocale = props.getCurrentLocale()
     this.currentUser = getCurrentUser(this.state.reduxState)
