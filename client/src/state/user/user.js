@@ -113,7 +113,11 @@ export class User extends ReduxObject {
   isPasswordValid () { return this.getUserPassword() && passwordTest.test(this.getUserPassword()) }
   isNewPasswordValid () { return !this.getNewPassword() || passwordTest.test(this.getNewPassword()) }
   isPhoneValid () { return this.getUserPhone() && phoneTest.test(this.getUserPhone()) }
-  isReCaptchaResponseValid () { return this.getReCaptchaResponse() && (this.getReCaptchaResponse().length > 0) }
+  isReCaptchaResponseValid () {
+    if (this.data.has(USER_RECAPTCHA_RESPONSE) &&
+        this.data.get(USER_RECAPTCHA_RESPONSE) !== undefined &&
+        this.data.get(USER_RECAPTCHA_RESPONSE).length > 0) { return true } else { return false }
+  }
   isNewUserValid () {
     return this.isEmailValid() &&
            this.isPasswordValid() &&

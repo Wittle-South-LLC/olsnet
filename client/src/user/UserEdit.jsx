@@ -78,7 +78,7 @@ export default class UserEdit extends React.Component {
     })
   }
   isEditMode () {
-    return window.location.pathname === '/user'
+    return this.context.router.route.location.pathname === '/user'
   }
   onPW2Change (e) {
     this.setState({
@@ -106,8 +106,6 @@ export default class UserEdit extends React.Component {
       } else {
         this.context.dispatch(registerUser('/home/login'))
       }
-    } else {
-      console.log('UserEdit form not valid on submit')
     }
     e.preventDefault()
   }
@@ -130,10 +128,10 @@ export default class UserEdit extends React.Component {
     else if (!this.isEditMode() && !this.props.user.isReCaptchaResponseValid()) { this.context.dispatch(setMessage(this.componentText.olsRecaptchaResponse, 'error')) }
     if (this.isEditMode()) {
       return this.props.user.isEditUserValid() &&
-             document.editUserForm.newPassword.value === document.editUserForm.password2.value
+             this.props.user.getNewPassword() === this.state.newPassword2
     } else {
       return this.props.user.isNewUserValid() &&
-             document.editUserForm.password.value === document.editUserForm.password2.value
+             this.props.user.getUserPassword() === this.state.password2
     }
   }
   render () {

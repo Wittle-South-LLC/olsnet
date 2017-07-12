@@ -28,8 +28,8 @@ export default class Login extends React.Component {
     })
   }
   loginUser (e) {
-    e.preventDefault()
     this.context.dispatch(loginUser('/home'))
+    e.preventDefault()
   }
   onFieldChange (e) {
     this.context.dispatch(editUserField(e.target.id, e.target.value))
@@ -80,6 +80,5 @@ export default class Login extends React.Component {
 
 Login.contextTypes = {
   dispatch: PropTypes.func,
-  intl: intlShape,
-  reduxState: PropTypes.object
+  intl: intlShape
 }

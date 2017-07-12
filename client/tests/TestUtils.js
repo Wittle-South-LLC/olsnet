@@ -24,6 +24,11 @@ export function isd (from, to) {
   return result
 }
 
+// Deep log an object
+export function logDeep (obj) {
+  return JSON.stringify(obj, null, 2)
+}
+
 // This function combines the fetch start and fetch end testing for
 // a given async call. The first state is the expected state of the
 // store once fetch starts, and the second is the expected state when
