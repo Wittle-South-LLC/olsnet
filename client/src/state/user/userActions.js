@@ -38,6 +38,24 @@ export function loginUser (nextPath = undefined) {
   }
 }
 
+// Should login in a user and populate the user section of state
+export function loginFacebook (accessToken, nextPath = undefined) {
+  return (dispatch, getState) => {
+    let myUser = getCurrentUser(getState())
+    if (!myUser.fetching) {
+      let payload = {
+        apiUrl: '/login',
+        method: 'POST',
+        type: USER,
+        verb: VERB_LOGIN,
+        successMsg: componentText.userLogin,
+        sendData: { access_token: accessToken }
+      }
+      return dispatch(fetchReduxAction(payload, nextPath))
+    } else return handleDoubleClick(dispatch, nextPath)
+  }
+}
+
 // Should populate the user section of state for a user that is already
 // logged in (has an access token cookie)
 export function hydrateApp (nextPath = undefined) {

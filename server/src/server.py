@@ -74,17 +74,17 @@ FAPP.config['JWT_CSRF_METHODS'] = ['POST', 'PUT', 'PATCH', 'DELETE', 'GET']
 # Create database connection and sessionmaker
 try:
     ENGINE = create_engine(CONNECT_STRING, pool_recycle=3600)
-except exc.SQLAlchemyError:
+except exc.SQLAlchemyError: # pragma: no cover
     LOGGER.debug('Caught exception in create_engine: ' + exc.SQLAlchemyError)
 try:
     DBSESSION = sessionmaker(bind=ENGINE)
-except exc.SQLAlchemyError:
+except exc.SQLAlchemyError: # pragma: no cover
     LOGGER.debug('Caught an exception in sessionmaker' + exc.SQLAlchemyError)
 LOGGER.debug('We have created a session')
 try:
     if not ENGINE.dialect.has_table(ENGINE, 'User'):
         Base.metadata.create_all(ENGINE)
-except exc.SQLAlchemyError:
+except exc.SQLAlchemyError: # pragma: no cover
     LOGGER.debug('Caught an exception in schema setup' + exc.SQLAlchemyError)
 
 # This method ensures that we have a user object both in global and
@@ -123,7 +123,7 @@ def after_request(func):
 # Need to recover if the sql server has closed the connection
 # due to a timeout or other reason
 @event.listens_for(ENGINE, "engine_connect")
-def ping_connection(connection, branch):
+def ping_connection(connection, branch): # pragma: no cover
     """Method to check if database connection is active """
     if branch:
         return

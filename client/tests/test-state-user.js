@@ -7,8 +7,8 @@ import { createStore, applyMiddleware } from 'redux'
 import nock from 'nock'
 import expect from 'expect'
 import { isd, testAsync } from './TestUtils'
-import { listUsers, loginUser, logoutUser, createUser, editUserField,
-         updateUser, registerUser, hydrateApp,
+import { listUsers, loginFacebook, loginUser, logoutUser, createUser,
+         editUserField, updateUser, registerUser, hydrateApp,
          componentText as userComponentText } from '../src/state/user/userActions'
 import { RO_INIT_DATA } from '../src/state/ReduxObject'
 import { fetchStatus } from '../src/state/fetchStatus/fetchStatusReducer'
@@ -29,6 +29,12 @@ userTestData[userRO.USER_ROLES] = 'User'
 userTestData[userRO.USER_PASSWORD] = 'Password'
 userTestData[userRO.USER_NEW_PASSWORD] = 'New Password'
 userTestData[userRO.USER_RECAPTCHA_RESPONSE] = 'ReCaptcha Response'
+let fbUserData = {
+  [userRO.USER_NAME]: 'Test.User',
+  [userRO.USER_EMAIL]: 'testuser@wittle.net',
+  [userRO.USER_ID]: 'SDFERFER-SDFRFSF',
+  [userRO.USER_ROLES]: 'User'
+}
 
 describe('user: testing ReduxObject actions', () => {
   // Now test it
@@ -114,12 +120,10 @@ describe('user: testing ReduxObject actions', () => {
   })
   // Test ReCaptcha Reponse validation
   it('isReCaptchaResponse() returns true for a valid reCaptcha response', () => {
-    console.log('EricCheck: ', createUserTest.isReCaptchaResponseValid())
     expect(createUserTest.isReCaptchaResponseValid()).toEqual(true)
   })
   it('isReCaptchaResponse() returns false for missing reCaptcha response', () => {
     let invalidRecaptcha = createUserTest.updateField(userRO.USER_RECAPTCHA_RESPONSE, undefined)
-    console.log('EricCheck: ', invalidRecaptcha.isReCaptchaResponseValid())
     expect(invalidRecaptcha.isReCaptchaResponseValid()).toNotExist()
   })
 })
@@ -163,6 +167,13 @@ describe('user: testing reducing of asynchronous actions', () => {
     nock(process.env.TEST_URL).post('/login').reply(200, userTestData)
     testAsync(store, stateLoginStart, stateLoginSuccess, done)
     store.dispatch(loginUser())
+  })
+  it('handles loginFacebook with a successful response', (done) => {
+    let stateLoginFBSuccess = setStatusMessage(userRO.setCurrentUser(initialState, new userRO.User({ [RO_INIT_DATA]: fbUserData })), userComponentText.userLogin)
+    let store = createStore(testUserState, initialState, applyMiddleware(thunkMiddleware))
+    nock(process.env.TEST_URL).post('/login').reply(200, fbUserData)
+    testAsync(store, undefined, stateLoginFBSuccess, done)
+    store.dispatch(loginFacebook('My Access Token'))
   })
   it('handles loginUser with an unsuccessful response', (done) => {
     const stateLoginFailed = setErrorMessage(clearUserFetching(stateLoginStart), componentText.invalidCredentials)
