@@ -92,10 +92,14 @@ export default class UserEdit extends React.Component {
       newPasswordsMatch: this.props.user.getNewPassword() === e.target.value
     })
   }
+  // Test coverage should ignore callbacks triggered by reCaptcha
+  /* istanbul ignore next */
   onloadCallback () {
     // All new users start with the role 'User'
     this.context.dispatch(editUserField('roles', 'User'))
   }
+  // Test coverage should ignore callbacks triggered by reCaptcha
+  /* istanbul ignore next */
   onVerifyCallback (response) {
     this.context.dispatch(editUserField('reCaptchaResponse', response))
   }
