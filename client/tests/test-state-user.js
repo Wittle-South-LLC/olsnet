@@ -21,7 +21,7 @@ import { setFetchStart, setFetchStop, setStatusMessage,
 // from a fetch request to use for testing
 let userTestData = {}
 userTestData[userRO.USER_NAME] = 'TestUser'
-userTestData[userRO.USER_ID] = 'SDFDFSDFS-SFSDFDSFSFS'
+userTestData[userRO.USER_ID] = '1b44827f-3757-4bbc-a37e-d9f44067bfb6'
 userTestData[userRO.USER_PHONE] = '9199293456'
 userTestData[userRO.USER_EMAIL] = 'testuser@wittle.net'
 userTestData[userRO.USER_PREFERENCES] = {'color': 'purple'}
@@ -189,9 +189,9 @@ describe('user: testing reducing of asynchronous actions', () => {
     const stateUpdateSuccess = setStatusMessage(clearUserFetching(userRO.setCurrentUser(statePreUpdate,
                                userRO.getCurrentUser(statePreUpdate).clearDirty().updateField(userRO.USER_PASSWORD, undefined))), userComponentText.userUpdated)
     let store = createStore(testUserState, statePreUpdate, applyMiddleware(thunkMiddleware))
-    nock(process.env.TEST_URL).put('/users/TestUser').reply(200, {})
+    nock(process.env.TEST_URL).put('/users/' + userTestData[userRO.USER_ID]).reply(200, {})
     testAsync(store, stateUpdateStart, stateUpdateSuccess, done)
-    store.dispatch(updateUser())
+    store.dispatch(updateUser(userRO.getCurrentUser(statePreUpdate)))
   })
   it('handles hydrateApp with a successful response', (done) => {
     const stateHydrateStart = setUserFetching(initialState)
@@ -201,10 +201,18 @@ describe('user: testing reducing of asynchronous actions', () => {
     testAsync(store, stateHydrateStart, stateHydrateSuccess, done)
     store.dispatch(hydrateApp())
   })
-  it('handles editUser successfully', () => {
+  it('handles editUser for current user successfully', () => {
     let resultState = userRO.setCurrentUser(stateLoginSuccess,
                       userRO.getCurrentUser(stateLoginSuccess).updateField(userRO.USER_NAME, 'Edited').setDirty())
     expect(isd(testUserState(stateLoginSuccess, editUserField('username', 'Edited')), resultState)).toEqual(true)
+  })
+  it('handles editUser for user in list successfully', () => {
+    let testUser = userRO.getCurrentUser(stateLoginSuccess).updateField(userRO.USER_NAME, 'User 2')
+                                                           .updateField(userRO.USER_ID, 'userID2')
+    let startState = initialState.setIn(['user', 'list'],
+      List([userRO.getCurrentUser(stateLoginSuccess), testUser]))
+    let resultState = startState.setIn(['user', 'list', 1], testUser.updateField(userRO.USER_ROLES, 'User, Admin, TemplateEdit').setDirty())
+    expect(isd(testUserState(startState, editUserField(userRO.USER_ROLES, 'User, Admin, TemplateEdit', testUser)), resultState)).toEqual(true)
   })
   let stateRegisterInit = userRO.setCurrentUser(stateLoginSuccess,
                           userRO.getCurrentUser(stateLoginSuccess).updateField(userRO.USER_ID, undefined).setDirty().setNew())
@@ -226,22 +234,23 @@ describe('user: testing reducing of asynchronous actions', () => {
   })
 // List user states starting from successful login state
   const stateListUsersStart = stateLoginSuccess.setIn(['user', 'list'], undefined)
+                                               .setIn(['user', 'listFetching'], true)
                                                .setIn(['fetchStatus', 'fetching'], true)
   it('handles listUsers with a successful response', (done) => {
     const userList = [ { username: 'testing', preferences: {}, user_id: 1 } ]
     const stateUsersListed = stateLoginSuccess.setIn(['user', 'list'],
                              List([]).push(new userRO.User({ [RO_INIT_DATA]: userList[0] })))
     let store = createStore(testUserState, stateLoginSuccess, applyMiddleware(thunkMiddleware))
-    nock(process.env.TEST_URL).get('/users').reply(200, userList)
+    nock(process.env.TEST_URL).get('/users?search_text=').reply(200, userList)
     testAsync(store, stateListUsersStart, stateUsersListed, done)
-    store.dispatch(listUsers())
+    store.dispatch(listUsers(''))
   })
   it('handles listUsers with an unsuccessful response', (done) => {
     const stateListUsersFailed = setErrorMessage(stateLoginSuccess, componentText.invalidCredentials)
     let store = createStore(testUserState, stateLoginSuccess, applyMiddleware(thunkMiddleware))
-    nock(process.env.TEST_URL).get('/users').reply(401)
+    nock(process.env.TEST_URL).get('/users?search_text=').reply(401)
     testAsync(store, stateListUsersStart, stateListUsersFailed, done)
-    store.dispatch(listUsers())
+    store.dispatch(listUsers(''))
   })
   it('handles logoutUser', (done) => {
     const stateLogoutStart = setUserFetching(stateLoginSuccess)

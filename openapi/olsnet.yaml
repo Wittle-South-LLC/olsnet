@@ -38,6 +38,8 @@ paths:
       summary: Get a list of users
       tags:
         - Users
+      parameters:
+        - $ref: '#/parameters/search_text'
       responses:
         200:
           description: List of users found
@@ -47,15 +49,15 @@ paths:
               $ref: '#/definitions/User'
       security:
         - main: []
-  /users/{username}:
+  /users/{user_id}:
     parameters:
-      - name: username
+      - name: user_id
         description: Username for the user, 4 to 32 characters in length
         in: path
         type: string
         required: true
         minLength: 4
-        maxLength: 32
+        maxLength: 400
     get:
       summary: Get information for a user by username
       tags:
@@ -177,6 +179,14 @@ securityDefinitions:
     description: User access key in cookie and CSRF key in header
     name: X-CSRF-TOKEN
     in: header
+
+parameters:
+  search_text:
+    in: query
+    name: search_text
+    required: false
+    type: string
+    description: String to filter search with
 
 definitions:
   Login:

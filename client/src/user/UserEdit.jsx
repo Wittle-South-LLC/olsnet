@@ -106,7 +106,7 @@ export default class UserEdit extends React.Component {
   onSubmit (e) {
     if (this.validInput()) {
       if (this.isEditMode()) {
-        this.context.dispatch(updateUser('/home'))
+        this.context.dispatch(updateUser(this.props.user, '/home'))
       } else {
         this.context.dispatch(registerUser('/home/login'))
       }

@@ -91,6 +91,7 @@ export class User extends ReduxObject {
   }
   // Accessor methods
   getUserName () { return this.data.get(USER_NAME) }
+  getId () { return this.data.get(USER_ID) }
   getUserId () { return this.data.get(USER_ID) }
   getUserPhone () { return this.data.get(USER_PHONE) }
   getUserEmail () { return this.data.get(USER_EMAIL) }
@@ -136,6 +137,10 @@ export class User extends ReduxObject {
 
 // State assistance methods for core application
 export const getCurrentUser = (state) => state.getIn(USER_STATE_PATH)
+export const getUserById = (state, userId) => {
+  let myIndex = state.getIn(['user', 'list']).findIndex((user) => user.getId() === userId)
+  return state.getIn(['user', 'list', myIndex])
+}
 export const setCurrentUser = (state, user) => state.setIn(USER_STATE_PATH, user)
 
 // Reducer

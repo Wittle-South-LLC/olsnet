@@ -119,6 +119,7 @@ function fetchError (payload, message) {
     verb: payload.verb,
     status: FETCH_ERROR,
     sendData: payload.sendData,
+    reduxObj: payload.reduxObj,
     message
   }
 }
@@ -131,6 +132,7 @@ function fetchSuccess (payload, receivedData, nextPath) {
     status: FETCH_SUCCESS,
     sendData: payload.sendData,
     successMsg: payload.successMsg,
+    reduxObj: payload.reduxObj,
     receivedData,
     nextPath
   }

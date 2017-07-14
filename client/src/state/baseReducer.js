@@ -2,7 +2,7 @@
 
 import { List } from 'immutable'
 import { FETCH_ERROR, FETCH_START, FETCH_SUCCESS, VERB_NEW,
-         VERB_EDIT, VERB_CREATE, VERB_UPDATE,
+         VERB_EDIT, VERB_CREATE, VERB_DELETE, VERB_UPDATE,
          VERB_HYDRATE, VERB_LIST, VERB_LOGIN, VERB_LOGOUT } from './fetchStatus/fetchStatusActions'
 import { RO_INIT_DATA } from './ReduxObject'
 
@@ -32,11 +32,11 @@ export default function baseReducer (state, action, path = undefined, Cls = unde
       case FETCH_START:
         return action.verb !== VERB_LIST
           ? setObj(state, getObj(state).setFetching())
-          : state.set('list', undefined)
+          : state.set('list', undefined).set('listFetching', true)
       case FETCH_ERROR:
         return action.verb !== VERB_LIST
           ? setObj(state, getObj(state).clearFetching())
-          : state.delete('list')
+          : state.delete('list').delete('listFetching')
       case FETCH_SUCCESS:
         switch (action.verb) {
           case VERB_CREATE:
@@ -46,10 +46,31 @@ export default function baseReducer (state, action, path = undefined, Cls = unde
               return setObj(state, getObj(state).clearFetching().clearNew().clearDirty())
             }
           case VERB_UPDATE:
-            if (getObj(state).afterUpdateSuccess) {
-              return setObj(state, getObj(state).clearFetching().clearDirty().afterUpdateSuccess())
+            let newObj = action.reduxObj.afterUpdateSuccess
+              ? action.reduxObj.clearFetching().clearDirty().afterUpdateSuccess()
+              : action.reduxObj.clearFetching().clearDirty()
+            if (action.reduxObj.getId() === getObj(state).getId()) {
+              return setObj(state, newObj)
+            } else if (state.has('list')) {
+              let myIndex = state.get('list').findIndex((obj) => obj.getId() === newObj.getId())
+              // TODO: The start of the below statement is a hack, the code in FETCH_START above
+              //       should not be setting fetching if the object being updated is not the current
+              //       object. Postponing addressing this until I make the change to have current
+              //       be a pointer to the object in the collection rather than a stand-alone object
+              return setObj(state, getObj(state).clearFetching()).setIn(['list', myIndex], newObj)
             } else {
-              return setObj(state, getObj(state).clearFetching().clearDirty())
+              return state
+            }
+          case VERB_DELETE:
+            if (state.has('list')) {
+              let myIndex = state.get('list').findIndex((obj) => obj.getId() === action.reduxObj.getId())
+              if (myIndex >= 0) {
+                return state.deleteIn(['list', myIndex])
+              } else {
+                return state
+              }
+            } else {
+              return state
             }
           case VERB_LOGIN:
           case VERB_HYDRATE:
@@ -61,7 +82,7 @@ export default function baseReducer (state, action, path = undefined, Cls = unde
             for (let u of action.receivedData) {
               ret = ret.push(new Cls({ [RO_INIT_DATA]: u }))
             }
-            return state.set('list', ret)
+            return state.set('list', ret).delete('listFetching')
           default: // Covers all other action verbs
             return setObj(state, getObj(state).clearFetching())
         }
@@ -73,7 +94,17 @@ export default function baseReducer (state, action, path = undefined, Cls = unde
       case VERB_NEW:
         return setObj(state, new Cls().setNew())
       case VERB_EDIT:
-        return setObj(state, getObj(state).updateField(action.fieldName, action.fieldValue).setDirty())
+        if (!action.editObj) {
+          return setObj(state, getObj(state).updateField(action.fieldName, action.fieldValue).setDirty())
+        } else {
+          if (state.has('list')) {
+            let myIndex = state.get('list').findIndex((item) => item.getId() === action.editObj.getId())
+            return state.setIn(['list', myIndex], state.getIn(['list', myIndex]).updateField(action.fieldName, action.fieldValue).setDirty())
+          } else {
+            console.log('VERB_EDIT action without list!')
+            return state
+          }
+        }
       default:
         return state
     }

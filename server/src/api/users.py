@@ -60,9 +60,13 @@ def post(user):
     return {'user_id': uuid.UUID(bytes=new_user.user_id)}, 201
 
 @jwt_required
-def search():
+def search(search_text):
     """Method to handle GET verb with no URL parameters"""
+    my_search = '%'
+    if search_text:
+        my_search = '%' + search_text + '%'
     user_list = g.db_session.query(User)\
+                 .filter(User.username.like(my_search))\
                  .order_by(User.username)\
                  .all()
     ret = []
@@ -71,9 +75,11 @@ def search():
     return ret, 200
 
 @jwt_required
-def delete(username):
-    """Method to handle DELETE verb for /users/{username} endpoint"""
-    delete_user = g.db_session.query(User).filter(User.username == username).one_or_none()
+def delete(user_id):
+    """Method to handle DELETE verb for /users/{user_id} endpoint"""
+    current_app.logger.debug('Delete user called with user_id = ' + user_id)
+    binary_uuid = uuid.UUID(user_id).bytes
+    delete_user = g.db_session.query(User).filter(User.user_id == binary_uuid).one_or_none()
     if not delete_user:
         return ('Not found', 404)
     g.db_session.delete(delete_user)
@@ -81,17 +87,18 @@ def delete(username):
     return 'User deleted', 204
 
 @jwt_required
-def put(username, user):
-    """Method to handle PUT verb for /users/{username} endpoint"""
-    update_user = g.db_session.query(User).filter(User.username == username).one_or_none()
+def put(user_id, user):
+    """Method to handle PUT verb for /users/{user_id} endpoint"""
+    binary_uuid = uuid.UUID(user_id).bytes
+    update_user = g.db_session.query(User).filter(User.user_id == binary_uuid).one_or_none()
     if not update_user:
         return ('Requested user not found', 404)
-    if not g.user.verify_password(user['password']):
+    if not 'Admin' in g.user.roles and not g.user.verify_password(user['password']):
         current_app.logger.debug('/users PUT: rejected missing current password')
         return ('You must provide current password with a user update', 401)
     if update_user.username != g.user.username and not 'Admin' in g.user.roles:
         current_app.logger.debug('/users PUT: rejected update to %s by %s with roles %s' %\
-                                 (username, g.user.username, g.user.roles))
+                                 (update_user.username, g.user.username, g.user.roles))
         return ('You are not authorized to modify this user', 401)
     for key, value in user.items():
         if key != 'password' and key != 'newPassword':
@@ -103,9 +110,10 @@ def put(username, user):
     return 'User updated', 200
 
 @jwt_required
-def get(username):
-    """Handles GET verb for /users/{username} endpoint"""
-    find_user = g.db_session.query(User).filter(User.username == username).one_or_none()
+def get(user_id):
+    """Handles GET verb for /users/{user_id} endpoint"""
+    binary_uuid = uuid.UUID(user_id).bytes
+    find_user = g.db_session.query(User).filter(User.user_id == binary_uuid).one_or_none()
     if not find_user:
         return ('Not found', 404)
     return find_user.dump(), 200
