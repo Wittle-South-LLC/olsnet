@@ -1,9 +1,12 @@
+# pylint: disable=R1703
+# Note: disabling the pylint whine about how I'm setting DEBUG_APP
 """Server.py - Creates API server"""
+import uuid
 import os.path
 import logging
 import connexion
 from connexion.resolver import RestyResolver
-from flask_jwt_extended import JWTManager, get_jwt_identity
+from flask_jwt_extended import JWTManager
 from flask import request, g, abort
 from sqlalchemy import create_engine, event, exc, select
 from sqlalchemy.orm import sessionmaker
@@ -92,7 +95,9 @@ except exc.SQLAlchemyError: # pragma: no cover
 @JWT.user_loader_callback_loader
 def user_loader_callback(identity):
     """Callback to load user object for requests where jwt_identity is required"""
-    g.user = g.db_session.query(User).filter(User.username == identity).one_or_none()
+    g.user = g.db_session.query(User)\
+                         .filter(User.user_id == uuid.UUID(identity).bytes)\
+                         .one_or_none()
     if not g.user:
         return None
     return g.user

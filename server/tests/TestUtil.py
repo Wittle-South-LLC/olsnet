@@ -8,20 +8,12 @@ LOGGER = logging.getLogger()
 # Set base URL, which will should only vary by port number
 BASE_URL = 'http://localhost:' + os.environ['WEBSERVER_HOST_PORT'] + '/api/v1'
 
-# Establish the CSRF token store
-csrf_token = None
-
-def set_csrf_token(token):
-    """Sets a global CSRF token to enable CSRF headers for requests in the same session"""
-    global csrf_token
-    csrf_token = token
-
-def clear_csrf_token():
-    """Clears the current CSRF token and returns it (for safekeeping)"""
-    global csrf_token
-    ret = csrf_token
-    csrf_token = None
-    return ret
+def get_new_session():
+    """Sets up a new session object that contains a requests session and a saved csrf token"""
+    return {
+        'session': requests.session(),
+        'csrf_token': None
+    }
 
 def log_response_error(resp):
     """Shared method for logging response errors"""
@@ -31,20 +23,25 @@ def log_response_error(resp):
 def get_response_with_jwt(test_session, method, url, payload=None):
     """Returns response for desired method with optional payload, adding JWT auth"""
     # If test_session is defined, then use it, otherwise use requests
-    req = test_session if test_session else requests
+    req = test_session['session'] if test_session else requests
     args = {}
     if method == 'PUT' or method == 'POST':
         args['json'] = payload
-    if test_session and csrf_token:
-        LOGGER.debug('get_response_with_JWT setting session CSRF token to: ' + str(csrf_token))
-        args['headers'] = {'X-CSRF-TOKEN': csrf_token}
+    if test_session and test_session['csrf_token']:
+        LOGGER.debug('get_response_with_JWT setting session CSRF token to: ' +
+                     str(test_session['csrf_token']))
+        args['headers'] = {'X-CSRF-TOKEN': test_session['csrf_token']}
     LOGGER.debug('args = ' + str(args))
+    resp = None
     if method == 'GET':
-        return req.get(BASE_URL + url, **args)
+        resp = req.get(BASE_URL + url, **args)
     elif method == 'PUT':
-        return req.put(BASE_URL + url, **args)
+        resp = req.put(BASE_URL + url, **args)
     elif method == 'POST':
-        return req.post(BASE_URL + url, **args)
+        resp = req.post(BASE_URL + url, **args)
     elif method == 'DELETE':
-        return req.delete(BASE_URL + url, **args)
-    return None
+        resp = req.delete(BASE_URL + url, **args)
+    if resp and test_session and \
+       not test_session['csrf_token'] and 'csrf_access_token' in resp.cookies:
+        test_session['csrf_token'] = resp.cookies['csrf_access_token']
+    return resp

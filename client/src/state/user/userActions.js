@@ -16,8 +16,8 @@ export function createUser () {
   return { type: USER, verb: VERB_NEW }
 }
 
-export function editUserField (fieldName, fieldValue) {
-  return { type: USER, verb: VERB_EDIT, fieldName, fieldValue }
+export function editUserField (fieldName, fieldValue, editObj = undefined) {
+  return { type: USER, verb: VERB_EDIT, fieldName, fieldValue, editObj }
 }
 
 // Should login in a user and populate the user section of state
@@ -102,40 +102,43 @@ export function registerUser (nextPath = undefined) {
 // prior to issuing the payload. If so, it will be checking
 // for a user in a list, since you cannot delete the current
 // user
-export function deleteUser (username, nextPath = undefined) {
+export function deleteUser (user, nextPath = undefined) {
   return (dispatch, getState) => {
     let payload = {
-      apiUrl: '/users/' + username,
+      apiUrl: '/users/' + user.getId(),
       method: 'DELETE',
       type: USER,
       verb: VERB_DELETE,
-      sendData: { username }
+      reduxObj: user,
+      sendData: {
+        username: user.getUserName()
+      }
     }
     return dispatch(fetchReduxAction(payload, nextPath))
   }
 }
 
-export function updateUser (nextPath = undefined) {
+export function updateUser (user, nextPath = undefined) {
   return (dispatch, getState) => {
-    let myUser = getCurrentUser(getState())
-    if (!myUser.fetching && myUser.dirty) {
+    if (!user.fetching && user.dirty) {
       let payload = {
-        apiUrl: '/users/' + myUser.getUserName(),
+        apiUrl: '/users/' + user.getId(),
         method: 'PUT',
         type: USER,
         verb: VERB_UPDATE,
         successMsg: componentText.userUpdated,
+        reduxObj: user,
         sendData: {
-          username: myUser.getUserName(),
-          password: myUser.getUserPassword(),
-          email: myUser.getUserEmail(),
-          phone: myUser.getUserPhone(),
-          preferences: myUser.getUserPreferences().toJS(),
-          roles: myUser.getUserRoles()
+          username: user.getUserName(),
+          password: user.getUserPassword(),
+          email: user.getUserEmail(),
+          phone: user.getUserPhone(),
+          preferences: user.getUserPreferences().toJS(),
+          roles: user.getUserRoles()
         }
       }
-      if (myUser.getNewPassword()) {
-        payload.sendData['newPassword'] = myUser.getNewPassword()
+      if (user.getNewPassword()) {
+        payload.sendData['newPassword'] = user.getNewPassword()
       }
       return dispatch(fetchReduxAction(payload, nextPath))
     } else return handleDoubleClick(dispatch, nextPath)
@@ -157,17 +160,18 @@ export function logoutUser (nextPath = '/home') {
       }
       return dispatch(fetchReduxAction(payload, nextPath))
     } else {
+      console.log('Current user is fetching!')
       return handleDoubleClick(dispatch, nextPath)
     }
   }
 }
 
 // Make an asynchronous call to get the list of users if it has not already been fetched
-export function listUsers (nextPath = undefined) {
+export function listUsers (searchText, nextPath = undefined) {
   return (dispatch, getState) => {
-    if (!getState().hasIn(['user', 'list'])) {
+    if (!getState().hasIn(['user', 'listFetching'])) {
       let payload = {
-        apiUrl: '/users',
+        apiUrl: '/users?search_text=' + searchText,
         method: 'GET',
         type: USER,
         verb: VERB_LIST

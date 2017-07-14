@@ -30,6 +30,9 @@ const Home = asyncComponent(() =>
 const Preferences = asyncComponent(() =>
   System.import('./user/Preferences').then(module => module.default)
 )
+const Admin = asyncComponent(() =>
+  System.import('./admin/Admin').then(module => module.default)
+)
 
 /* Container will receive the Redux store via props, and will set
  * its state to the current store. The container also puts the
@@ -153,7 +156,8 @@ export default class Container extends React.Component {
           <Row>
             <Switch>
               <Route path={'/home'} component={Home} />
-              <Route path={'/user'} component={Preferences}/>
+              <Route path={'/user'} component={Preferences} />
+              <Route path={'/admin'} component={Admin} />
             </Switch>
           </Row>
         </Grid>

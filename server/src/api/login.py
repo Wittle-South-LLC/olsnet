@@ -15,16 +15,19 @@ from dm.User import User
 def post(login_data):
     """handles POST verb for /login endpoint"""
 
-    # Need to confirm that either username & password are provided, or 
+    # Need to confirm that either username & password are provided, or
     # access_token for a Facebook login.
-    if ('username' not in login_data or 'password' not in login_data) and 'access_token' not in login_data:
+    if ('username' not in login_data or 'password' not in login_data)\
+       and 'access_token' not in login_data:
         abort(400, 'Either username/password or access_token are required')
-    
+
     # Get user based on username / password or access_token
     if 'username' in login_data:
 
         # Look up the user and verify that the password is correct
-        user = g.db_session.query(User).filter(User.username == login_data['username']).one_or_none()
+        user = g.db_session.query(User)\
+                           .filter(User.username == login_data['username'])\
+                           .one_or_none()
         if not user or not user.verify_password(login_data['password']):
             abort(401, 'Invalid Username/Password Combination')
 
@@ -60,8 +63,8 @@ def post(login_data):
 
     # Create access and refresh tokens for the user. See the documentation for
     # flask-jwt-extended for details on these two different kinds of tokens
-    access_token = create_access_token(identity=user.username)
-    refresh_token = create_refresh_token(identity=user.username)
+    access_token = create_access_token(identity=user.get_uuid())
+    refresh_token = create_refresh_token(identity=user.get_uuid())
 
     # Build the response data by dumping the user data
     resp = jsonify(user.dump())
