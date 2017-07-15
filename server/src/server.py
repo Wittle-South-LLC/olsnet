@@ -1,9 +1,12 @@
+# pylint: disable=R1703
+# Note: disabling the pylint whine about how I'm setting DEBUG_APP
 """Server.py - Creates API server"""
+import uuid
 import os.path
 import logging
 import connexion
 from connexion.resolver import RestyResolver
-from flask_jwt_extended import JWTManager, get_jwt_identity
+from flask_jwt_extended import JWTManager, create_access_token, set_access_cookies
 from flask import request, g, abort
 from sqlalchemy import create_engine, event, exc, select
 from sqlalchemy.orm import sessionmaker
@@ -17,8 +20,14 @@ OTHER_PRECHECK_401 = 'Other 401 response'
 # Get the spec file from the environment variable
 OPENAPI_SPEC = os.environ['OPENAPI_SPEC']
 
+# Set up Connexion for debugging based on FLASK_DEBUG environment variable
+if 'FLASK_DEBUG' in os.environ and int(os.environ['FLASK_DEBUG']) == 1:
+    DEBUG_APP = True
+else:
+    DEBUG_APP = False
+
 # Create the connextion-based Flask app, and tell it where to look for API specs
-APP = connexion.FlaskApp(__name__, specification_dir='swagger/', swagger_json=True)
+APP = connexion.FlaskApp(__name__, specification_dir='swagger/', swagger_json=True, debug=DEBUG_APP)
 FAPP = APP.app
 # JWT implementation
 JWT = JWTManager(FAPP)
@@ -68,17 +77,17 @@ FAPP.config['JWT_CSRF_METHODS'] = ['POST', 'PUT', 'PATCH', 'DELETE', 'GET']
 # Create database connection and sessionmaker
 try:
     ENGINE = create_engine(CONNECT_STRING, pool_recycle=3600)
-except exc.SQLAlchemyError:
+except exc.SQLAlchemyError: # pragma: no cover
     LOGGER.debug('Caught exception in create_engine: ' + exc.SQLAlchemyError)
 try:
     DBSESSION = sessionmaker(bind=ENGINE)
-except exc.SQLAlchemyError:
+except exc.SQLAlchemyError: # pragma: no cover
     LOGGER.debug('Caught an exception in sessionmaker' + exc.SQLAlchemyError)
 LOGGER.debug('We have created a session')
 try:
     if not ENGINE.dialect.has_table(ENGINE, 'User'):
         Base.metadata.create_all(ENGINE)
-except exc.SQLAlchemyError:
+except exc.SQLAlchemyError: # pragma: no cover
     LOGGER.debug('Caught an exception in schema setup' + exc.SQLAlchemyError)
 
 # This method ensures that we have a user object both in global and
@@ -86,7 +95,9 @@ except exc.SQLAlchemyError:
 @JWT.user_loader_callback_loader
 def user_loader_callback(identity):
     """Callback to load user object for requests where jwt_identity is required"""
-    g.user = g.db_session.query(User).filter(User.username == identity).one_or_none()
+    g.user = g.db_session.query(User)\
+                         .filter(User.user_id == uuid.UUID(identity).bytes)\
+                         .one_or_none()
     if not g.user:
         return None
     return g.user
@@ -108,16 +119,22 @@ def before_request():
             abort(401, OTHER_PRECHECK_401)
 
 @FAPP.after_request
-def after_request(func):
+def after_request(resp):
     """Method to do work after the request"""
+    # If we have a valid response, create a new access_token to
+    # reset the 15 minute clock
+    if (resp.status_code) < 400 and 'user' in g and\
+       not request.path in ['/api/v1/logout', '/api/v1/shutdown']:
+        LOGGER.debug('Setting access_tokens for ' + request.path)
+        access_token = create_access_token(identity=g.user.get_uuid())
+        set_access_cookies(resp, access_token)
     g.db_session.close()
-    g.auth = None
-    return func
+    return resp
 
 # Need to recover if the sql server has closed the connection
 # due to a timeout or other reason
 @event.listens_for(ENGINE, "engine_connect")
-def ping_connection(connection, branch):
+def ping_connection(connection, branch): # pragma: no cover
     """Method to check if database connection is active """
     if branch:
         return
@@ -137,4 +154,4 @@ def ping_connection(connection, branch):
         connection.should_close_with_result = save_should_close_with_result
 
 # Start the app
-APP.run(host='0.0.0.0', port=APPSERVER_PORT)
+APP.run(host='0.0.0.0', port=int(APPSERVER_PORT))

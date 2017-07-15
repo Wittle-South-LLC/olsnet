@@ -82,12 +82,18 @@ var config = {
       filename: BUILD_DIR + '/index.html',
       inject: true
     }),
+    new webpack.ProvidePlugin({
+      'FB': 'facebook'
+    }),
     // Generates the manifest that identifies the specific builds of main and vendor
     // to embed in the HTML
     new InlineChunkPlugin({
       inlineChunks: ['manifest']
     })
   ],
+  externals: {
+    facebook: 'FB'
+  },
   module: {
     loaders: [
       // Loader specification for JSX files that are not named routes

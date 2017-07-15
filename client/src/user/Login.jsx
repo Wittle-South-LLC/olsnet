@@ -4,13 +4,19 @@ import PropTypes from 'prop-types'
 import { Col, ControlLabel, Form, FormControl, Panel, Row } from 'react-bootstrap'
 import { intlShape, defineMessages } from 'react-intl'
 import PanelHeader from '../components/PanelHeader'
-import { loginUser } from '../state/user/userActions'
+import { editUserField, loginFacebook, loginUser } from '../state/user/userActions'
 import './Login.css'
 
 export default class Login extends React.Component {
   constructor (props, context) {
     super(props, context)
+    this.state = {
+      fbAuthenticated: false
+    }
+    this.handleFacebookAuth = this.handleFacebookAuth.bind(this)
+    this.onFBCheck = this.onFBCheck.bind(this)
     this.loginUser = this.loginUser.bind(this)
+    this.onFieldChange = this.onFieldChange.bind(this)
     this.componentText = defineMessages({
       pageName: { id: 'Login.pageName', defaultMessage: 'Continue with Facebook' },
       userNameLabel: { id: 'Login.loginPrompt', defaultMessage: 'User Name' },
@@ -26,9 +32,34 @@ export default class Login extends React.Component {
       fbLoginHeader: { id: 'Login.fbLoginHeader', defaultMessage: 'Continue with Facebook' }
     })
   }
+  // Test coverage should ignore callbacks triggered by Facebook code
+  /* istanbul ignore next */
+  handleFacebookAuth (response) {
+    if (response.status === 'connected') {
+      this.setState({fbAuthenticated: true})
+      this.context.dispatch(loginFacebook(response.authResponse.accessToken, '/home'))
+    } else if (response.status === 'not_authorized') {
+      console.log('Not authorized')
+    } else {
+      console.log(`Facebook response.status = ${response.status}`, response)
+      FB.login(this.handleFacebookAuth)
+    }
+  }
+  // Test coverage should ignore callbacks triggered by Facebook code
+  /* istanbul ignore next */
+  onFBCheck (e) {
+    FB.init({
+      appId: '323284451372735',
+      version: 'v2.8'
+    })
+    FB.getLoginStatus(this.handleFacebookAuth)
+  }
   loginUser (e) {
+    this.context.dispatch(loginUser('/home'))
     e.preventDefault()
-    this.context.dispatch(loginUser(document.loginForm.userName.value, document.loginForm.password.value, '/home'))
+  }
+  onFieldChange (e) {
+    this.context.dispatch(editUserField(e.target.id, e.target.value))
   }
   render () {
     let formatMessage = this.context.intl.formatMessage
@@ -46,15 +77,17 @@ export default class Login extends React.Component {
                 <ControlLabel>{formatMessage(this.componentText.userNameLabel)}</ControlLabel>
                 <FormControl
                  type='text'
-                 id='userName'
-                 placeholder={formatMessage(this.componentText.userNamePlaceholder)}/>
+                 id='username'
+                 placeholder={formatMessage(this.componentText.userNamePlaceholder)}
+                 onChange={this.onFieldChange}/>
               </Col>
               <Col md={6}>
                 <ControlLabel>{formatMessage(this.componentText.pwdLabel)}</ControlLabel>
                 <FormControl
                   type='password'
                   id='password'
-                  placeholder={formatMessage(this.componentText.pwdPlaceholder)}/>
+                  placeholder={formatMessage(this.componentText.pwdPlaceholder)}
+                  onChange={this.onFieldChange}/>
               </Col>
               <div className='loginInstructions'>{formatMessage(this.componentText.olsLoginInstructions)}</div>
               <input type="submit" id="hiddenSubmit"/>
@@ -64,7 +97,7 @@ export default class Login extends React.Component {
         </Col>
         <Col md={7}>
           <Panel header={formatMessage(this.componentText.fbLoginHeader)}>
-            <p>{formatMessage(this.componentText.pageName)}</p>
+            <p><span id='fbLoginLink' onClick={this.onFBCheck}>{formatMessage(this.componentText.pageName)}</span></p>
           </Panel>
         </Col>
       </Row>
@@ -74,6 +107,5 @@ export default class Login extends React.Component {
 
 Login.contextTypes = {
   dispatch: PropTypes.func,
-  intl: intlShape,
-  reduxState: PropTypes.object
+  intl: intlShape
 }
