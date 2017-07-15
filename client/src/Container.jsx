@@ -10,7 +10,7 @@
 */
 
 import React from 'react'
-import { Route, Switch } from 'react-router-dom'
+import { Redirect, Route, Switch } from 'react-router-dom'
 import PropTypes from 'prop-types'
 import { Grid, Row } from 'react-bootstrap'
 import SiteMenu from './navigation/SiteMenu'
@@ -50,6 +50,7 @@ export default class Container extends React.Component {
     // Method passed to store.subscribe, is called for each state change
     this.listenStore = this.listenStore.bind(this)
     this.init = this.init.bind(this)
+    this.getRoute = this.getRoute.bind(this)
 
     // Will be set when subscribe is called
     this.unsubscribe = undefined
@@ -133,6 +134,13 @@ export default class Container extends React.Component {
       reduxState: this.props.store.getState()
     })
   }
+  // Will return the provided route if the user is authenticated, and a redirect otherwise
+  getRoute (authRoute) {
+    let ret = getCurrentUser(this.state.reduxState).getId()
+      ? authRoute
+      : () => <Redirect to='/home' />
+    return ret
+  }
   // Render the container and its children
   render () {
     let locale = this.props.getCurrentLocale()
@@ -156,8 +164,8 @@ export default class Container extends React.Component {
           <Row>
             <Switch>
               <Route path={'/home'} component={Home} />
-              <Route path={'/user'} component={Preferences} />
-              <Route path={'/admin'} component={Admin} />
+              <Route path={'/user'} component={this.getRoute(Preferences)} />
+              <Route path={'/admin'} component={this.getRoute(Admin)} />
             </Switch>
           </Row>
         </Grid>
