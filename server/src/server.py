@@ -6,7 +6,7 @@ import os.path
 import logging
 import connexion
 from connexion.resolver import RestyResolver
-from flask_jwt_extended import JWTManager
+from flask_jwt_extended import JWTManager, create_access_token, set_access_cookies
 from flask import request, g, abort
 from sqlalchemy import create_engine, event, exc, select
 from sqlalchemy.orm import sessionmaker
@@ -119,11 +119,17 @@ def before_request():
             abort(401, OTHER_PRECHECK_401)
 
 @FAPP.after_request
-def after_request(func):
+def after_request(resp):
     """Method to do work after the request"""
+    # If we have a valid response, create a new access_token to
+    # reset the 15 minute clock
+    if (resp.status_code) < 400 and 'user' in g and\
+       not request.path in ['/api/v1/logout', '/api/v1/shutdown']:
+        LOGGER.debug('Setting access_tokens for ' + request.path)
+        access_token = create_access_token(identity=g.user.get_uuid())
+        set_access_cookies(resp, access_token)
     g.db_session.close()
-    g.auth = None
-    return func
+    return resp
 
 # Need to recover if the sql server has closed the connection
 # due to a timeout or other reason

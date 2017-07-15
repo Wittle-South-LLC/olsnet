@@ -42,6 +42,6 @@ def get_response_with_jwt(test_session, method, url, payload=None):
     elif method == 'DELETE':
         resp = req.delete(BASE_URL + url, **args)
     if resp and test_session and \
-       not test_session['csrf_token'] and 'csrf_access_token' in resp.cookies:
+       'csrf_access_token' in resp.cookies:
         test_session['csrf_token'] = resp.cookies['csrf_access_token']
     return resp
