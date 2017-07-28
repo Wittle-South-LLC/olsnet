@@ -70,6 +70,11 @@ fi
 # the server side
 export NODE_ENV=test
 
+# Ensure pythonpah is set so module imports work
+# Using . because this script assumes it is running
+# with the project root as the current directory
+export PYTHONPATH=$PYTHONPATH:./server
+
 # If we're running any tests, start the API server
 if [ "$run_nose" -gt "0" ] || [ "$run_integration" -gt "0" ]; then
   echo "Starting api server on localhost at port $APPSERVER_HOST_PORT"
@@ -93,20 +98,24 @@ if [ "$server_running" -gt "0" ]; then
   echo "Add User returned $ADD_USER"
 fi
 
+# TEST_URL is used in both nose test and mocha tests now
+export TEST_URL="http://localhost:${WEBSERVER_HOST_PORT}${API_PATH}"
+echo "TEST_URL = $TEST_URL"
+
 # If we are running nose tests, then do it
 if [ "$run_nose" -gt "0" ] && [ "$server_running" -gt "0" ]; then
   # TEST_URL is required for nose tests, it needs to be constructed
   # the same way that baseUrl in fetchReduxAction() in
   # src/state/fetchStatus/fetchStatusActions.js.
-  export TEST_URL="http://localhost:${WEBSERVER_HOST_PORT}/api/v1"
   eval "server/bin/nosetests --verbosity=$nose_verbosity $nose_args"
   nose_result=$?
 fi
 
 # If we are running mocha tests, then do it
 if [ "$run_mocha" -gt "0" ]; then
-  export API_ROOT="http://127.0.0.1:${WEBSERVER_HOST_PORT}/api/v1"
+  export API_ROOT="http://127.0.0.1:${WEBSERVER_HOST_PORT}${API_PATH}"
   echo "Set API_ROOT to $API_ROOT"
+  echo "--> API_PATH = $API_PATH"
 
   if [ "$run_integration" -gt "0" ] && [ "$server_running" -gt 0 ]; then
     echo "Including integration tests for mocha"

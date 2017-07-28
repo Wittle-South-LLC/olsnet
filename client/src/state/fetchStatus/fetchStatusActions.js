@@ -53,21 +53,6 @@ export function setNewPath (newPath) {
 export function fetchReduxAction (payload, successPath = undefined) {
   return (dispatch, getState) => {
     dispatch(fetchStart(payload.type, payload.verb, payload.sendData))
-    let headers
-    switch (payload.method) {
-      /* GET does not have payloads */
-      case 'GET':
-        headers = getApiHeaders(payload.method)
-        break
-      /* PUT, POST, and DELETE all have payloads */
-      case 'DELETE':
-      case 'PUT':
-      case 'POST':
-        headers = getApiHeaders(payload.method, JSON.stringify(payload.sendData))
-        break
-      default:
-        throw new Error('fetchReduxAction: Invalid or mssing method in payload')
-    }
     // The following is a hack so that we can use relative paths for APIs
     // fetch takes relative paths when executing in the browser (where window
     // is guaranteed to be defined), and requires absolute paths when running
@@ -77,7 +62,7 @@ export function fetchReduxAction (payload, successPath = undefined) {
     let baseUrl = (typeof window === 'undefined' ||
                    (typeof navigator !== 'undefined' &&
                     navigator.userAgent === 'node.js')) ? 'http://localhost:' + process.env.WEBSERVER_HOST_PORT : ''
-    return fetch(baseUrl + '/api/v1' + payload.apiUrl, headers)
+    return fetch(baseUrl + process.env.API_PATH + payload.apiUrl, getApiHeaders(payload))
       .then(response => checkResponse(payload.method, response))
       .then(json => dispatch(fetchSuccess(payload, json, successPath)))
       .catch(error => dispatch(fetchError(payload, error)))
@@ -138,24 +123,27 @@ function fetchSuccess (payload, receivedData, nextPath) {
   }
 }
 
-/* Construct the payload argument to fetch given the HTTP method,
-   authentication information, and optional body */
-function getApiHeaders (httpMethod, body = undefined) {
+/* Creates API headers for a fetch request based on payload information */
+export function getApiHeaders (payload) {
   const result = {
-    'method': httpMethod,
+    'method': payload.method,
     'headers': {
       'Content-Type': 'application/json'
     },
     'credentials': 'same-origin'
   }
-  if (body !== undefined) {
-    result['body'] = body
+  if ('sendData' in payload && payload.sendData !== undefined) {
+    result['body'] = JSON.stringify(payload.sendData)
   }
   // The following code looks in the document for cookies to see if the
   // server's CSRF token is available. If so, it adds it as a header
-  // to the request, which is required for most operations
+  // to the request, which is required for most operations. See documentation
+  // on CSRF protection in flask-jwt-extended.
   if (typeof document !== 'undefined' && document.cookie) {
     let csrfToken = getCookie('csrf_access_token')
+    if (!csrfToken) {
+      csrfToken = getCookie('csrf_refresh_token')
+    }
     if (csrfToken) {
       result['headers']['X-CSRF-TOKEN'] = csrfToken
     }
@@ -163,11 +151,12 @@ function getApiHeaders (httpMethod, body = undefined) {
   return result
 }
 
-// This function came from one of the answers to a StackOverflow question:
-// https://stackoverflow.com/questions/10730362/get-cookie-by-name
-// Credit to John S.
-// TODO: Test to see if the warnings about unnecessary escapes in
-//       the regex are correct.
+/* This function came from one of the answers to a StackOverflow question:
+ * https://stackoverflow.com/questions/10730362/get-cookie-by-name
+ * Credit to John S.
+ * TODO: Test to see if the warnings about unnecessary escapes in
+ *       the regex are correct.
+ */
 function getCookie (name) {
   function escape (s) {
     return s.replace(/([.*+?\^${}()|\[\]\/\\])/g, '\\$1') 
@@ -176,6 +165,8 @@ function getCookie (name) {
   return match ? match[1] : null
 }
 
+/* Handles case where fetch request for the object is already in progress
+   when a new one is attempted */
 export function handleDoubleClick (dispatch, nextPath) {
   if (nextPath) {
     return dispatch(setNewPath(nextPath))

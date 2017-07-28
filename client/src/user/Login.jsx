@@ -17,12 +17,14 @@ export default class Login extends React.Component {
     this.onFBCheck = this.onFBCheck.bind(this)
     this.loginUser = this.loginUser.bind(this)
     this.onFieldChange = this.onFieldChange.bind(this)
+    this.onResetClick = this.onResetClick.bind(this)
     this.componentText = defineMessages({
       pageName: { id: 'Login.pageName', defaultMessage: 'Continue with Facebook' },
       userNameLabel: { id: 'Login.loginPrompt', defaultMessage: 'User Name' },
       userNamePlaceholder: { id: 'Login.userNamePlaceholder', defaultMessage: 'User name...' },
       pwdLabel: { id: 'Login.pwdLabel', defaultMessage: 'Password:' },
       pwdPlaceholder: { id: 'Login.pwdPlaceholder', defaultMessage: 'Password...' },
+      resetText: { id: 'Login.resetText', defaultMessage: 'Click to reset password' },
       loginButtonLabel: { id: 'Login.loginButtonLabel', defaultMessage: 'Sign In!' },
       olsLoginHeader: { id: 'Login.olsLoginHeader', defaultMessage: 'Log in with Our Life Stories account' },
       olsLoginInstructions: {
@@ -61,6 +63,9 @@ export default class Login extends React.Component {
   onFieldChange (e) {
     this.context.dispatch(editUserField(e.target.id, e.target.value))
   }
+  onResetClick (e) {
+    this.context.router.history.push('/home/pw_reset')
+  }
   render () {
     let formatMessage = this.context.intl.formatMessage
     return (
@@ -91,6 +96,9 @@ export default class Login extends React.Component {
               </Col>
               <div className='loginInstructions'>{formatMessage(this.componentText.olsLoginInstructions)}</div>
               <input type="submit" id="hiddenSubmit"/>
+              <span id='resetLink' onClick={this.onResetClick} className='titlelink'>
+                {this.context.intl.formatMessage(this.componentText.resetText)}
+              </span>
             </div>
           </div>
          </Form>
@@ -107,5 +115,6 @@ export default class Login extends React.Component {
 
 Login.contextTypes = {
   dispatch: PropTypes.func,
-  intl: intlShape
+  intl: intlShape,
+  router: PropTypes.object
 }

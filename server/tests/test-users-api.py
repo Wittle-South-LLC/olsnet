@@ -5,7 +5,6 @@
 # tests.
 """test-users-api.py - Tests of users APIs"""
 import logging
-#import requests_mock
 from TestUtil import get_response_with_jwt, get_new_session,\
                      log_response_error
 

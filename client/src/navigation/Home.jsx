@@ -7,6 +7,7 @@ import { getCurrentUser } from '../state/user/user'
 import Login from '../user/Login'
 // import Register from '../user/Register'
 import UserEdit from '../user/UserEdit'
+import PasswordReset from '../user/PasswordReset'
 
 export default class Home extends React.Component {
   constructor (props, context) {
@@ -25,6 +26,7 @@ export default class Home extends React.Component {
           <Route path={'/home/register'} render={() => (
             <UserEdit user={getCurrentUser(this.context.reduxState)} />)}
           />
+          <Route path={'/home/pw_reset'} component={PasswordReset} />
         </Switch>
         <p>{this.context.intl.formatMessage(this.componentText.pageName)}</p>
       </div>

@@ -139,11 +139,11 @@ export default class UserEdit extends React.Component {
     }
   }
   render () {
+    // Shorthand for internationalization functions for readability
     let formatMessage = this.context.intl.formatMessage
+    const ctxt = this.componentText
     // Function to conditionally return argument based on current path
     const ifs = (u, s) => this.isEditMode() ? u : s
-    // Shorthand for componentText to make the render code more readable
-    const ctxt = this.componentText
     return (
       <Row>
         <Col md={12}>

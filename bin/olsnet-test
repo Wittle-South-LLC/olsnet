@@ -21,6 +21,10 @@ export APPSERVER_HOST_PORT=5001
 # must match the port set in the nginx.conf files in /proxy and /test/proxy
 export WEBSERVER_CONTAINER_PORT=8082
 export WEBSERVER_HOST_PORT=8081
+
+# API url path, including version
+export API_PATH='/api/v1'
+
 # The following lines are because the environment variable substitution in 
 # the nginx command in docker-compose.yml will replace nginx configuration
 # values as well as what we legitimately want as build environment config
@@ -37,8 +41,9 @@ export MYSQL_DATABASE=test
 export MYSQL_USER=test
 export MYSQL_PASSWORD=test
 
-# Database Connection String
+# Database Connection Strings, first for use inside containers, second from outside
 export CONNECT_STRING="mysql+mysqldb://test:test@database:3406/test?charset=utf8mb4"
+export TEST_CONNECT_STRING="mysql+mysqldb://test:test@127.0.0.1:3406/test?charset=utf8mb4"
 
 # Application Secret Key - Used in password hashing
 # To generate a new one:

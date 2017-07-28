@@ -58,3 +58,6 @@ export OPENAPI_SPEC="/openapi/olsnet.yaml"
 
 # Set up server command
 export SERVER_COMMAND="python3 /app/server.py"
+
+# Set up the API Path
+export API_PATH='/api/v1'

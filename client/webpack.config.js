@@ -57,7 +57,10 @@ var config = {
       'process.env': {
         // During build replace process.env.NODE_ENV with contents of NODE_ENV
         // environment variable present when webpack was run
-        'NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+        'NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+        // During build replace process.env.API_PATH with contents of API_PATH
+        // environment variable present when webpack was run
+        'API_PATH': JSON.stringify(process.env.API_PATH)
       }
     }),
     // Will auto-inject application version number from package.json, but

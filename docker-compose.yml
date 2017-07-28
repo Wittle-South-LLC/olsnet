@@ -51,6 +51,8 @@ services:
       - ./server/src:/app
       - ./openapi:/openapi
       - ./server/coverage:/coverage
+    # Below doesn't seem to work to get timezone correct on server
+    #  - /etc/localtime:/etc/localtime:ro
     # Don't start this until the database service is started
     depends_on:
       database:
