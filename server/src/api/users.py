@@ -37,7 +37,7 @@ def post(user):
         resp = requests.post(RECAPTCHA_URL, data={
             'secret': RECAPTCHA_KEY,
             'response': user['reCaptchaResponse'],
-            'remoteip': request.remote_addr})
+            'remoteip': request.remote_addr})   # pragma: no cover
     current_app.logger.debug('Google Post Response Status: ' + str(resp.status_code))
     current_app.logger.debug('Google Post Response JSON: ' + str(resp.json()))
     if resp.status_code >= 400 or not resp.json()['success']:
@@ -96,7 +96,12 @@ def put(user_id, user):
     update_user = g.db_session.query(User).filter(User.user_id == binary_uuid).one_or_none()
     if not update_user:
         return ('Requested user not found', 404)
-    if not 'Admin' in g.user.roles and not g.user.verify_password(user['password']):
+    # Allow Admin users to edit others without requiring a current password, 
+    # and let Facebook users edit their information without requiring a password, 
+    # but everyone else has to include their current password when making an edit
+    if not 'Admin' in g.user.roles and\
+       not g.user.source == 'Facebook' and\
+       not g.user.verify_password(user['password']):
         current_app.logger.debug('/users PUT: rejected missing current password')
         return ('You must provide current password with a user update', 401)
     if update_user.username != g.user.username and not 'Admin' in g.user.roles:

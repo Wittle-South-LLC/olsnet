@@ -144,7 +144,8 @@ export default class UserEdit extends React.Component {
              !user.isReCaptchaResponseValid()) { dispatch(setMessage(ctxt.olsRecaptchaResponse, 'error')) }
     if (this.isEditMode()) {
       return this.props.user.isEditUserValid() &&
-             this.props.user.getNewPassword() === this.state.newPassword2
+             (this.props.user.getNewPassword() === this.state.newPassword2 ||
+              this.props.user.getSource() == 'Facebook')
     } else {
       return this.props.user.isNewUserValid() &&
              this.props.user.getUserPassword() === this.state.password2
@@ -177,7 +178,7 @@ export default class UserEdit extends React.Component {
                     onChange={this.onFieldChange}/>
                 </FormGroup>
               </Col>
-              <Col md={6}>
+              { this.props.user.getSource() !== 'Facebook' && <Col md={6}>
                 <FormGroup validationState={this.props.user.isPasswordValid() ? undefined : 'warning'}>
                   <ControlLabel>{formatMessage(ifs(ctxt.olsEditPasswordLabel, ctxt.olsSignupPassword1Label))}</ControlLabel>
                   <FormControl
@@ -186,7 +187,7 @@ export default class UserEdit extends React.Component {
                     placeholder={formatMessage(ifs(ctxt.olsEditPasswordPlaceholder, ctxt.olsSignupPassword1Placeholder))}
                     onChange={this.onFieldChange}/>
                 </FormGroup>
-              </Col>
+              </Col>}
               <Col md={6}>
                 <FormGroup validationState={this.props.user.isEmailValid() ? undefined : 'warning'}>
                   <ControlLabel>{formatMessage(this.componentText.olsSignupEmailLabel)}</ControlLabel>
@@ -198,7 +199,7 @@ export default class UserEdit extends React.Component {
                     onChange={this.onFieldChange}/>
                 </FormGroup>
               </Col>
-              <Col md={6}>
+              { this.props.user.getSource() !== 'Facebook' && <Col md={6}>
                 {ifs(
                   <FormGroup validationState={this.props.user.isNewPasswordValid() ? undefined : 'warning'}>
                     <ControlLabel>{formatMessage(ctxt.olsSignupNewPasswordLabel)}</ControlLabel>
@@ -217,7 +218,7 @@ export default class UserEdit extends React.Component {
                       onChange={this.onPW2Change} />
                   </FormGroup>
                 )}
-              </Col>
+              </Col>}
               <Col md={6}>
                 <FormGroup validationState={this.props.user.isFirstNameValid() ? undefined : 'warning'}>
                   <ControlLabel>{formatMessage(ctxt.firstNameLabel)}</ControlLabel>
@@ -251,7 +252,7 @@ export default class UserEdit extends React.Component {
                     onChange={this.onFieldChange}/>
                 </FormGroup>
               </Col>
-              <Col md={6}>
+              { this.props.user.getSource() !== 'Facebook' && <Col md={6}>
                 {ifs(
                   <FormGroup validationState={this.state.newPasswordsMatch ? undefined : 'warning'}>
                     <ControlLabel>{formatMessage(ctxt.olsEditPassword2Label)}</ControlLabel>
@@ -266,7 +267,7 @@ export default class UserEdit extends React.Component {
                              onloadCallback={this.onloadCallback}
                              verifyCallback={this.onVerifyCallback} />
                 )}
-              </Col>
+              </Col>}
               {ifs(<div />,
                 <Col md={6}>
                   <div className='loginInstructions'>{formatMessage(this.componentText.olsSignupInstructions)}</div>

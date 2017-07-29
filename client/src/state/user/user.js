@@ -141,7 +141,7 @@ export class User extends ReduxObject {
   }
   isEditUserValid () {
     return this.isEmailValid() &&
-           this.isPasswordValid() &&
+           (this.isPasswordValid() || this.getSource() === 'Facebook') &&
            this.isNewPasswordValid() &&
            this.isPhoneValid() &&
            this.isUserNameValid() &&
