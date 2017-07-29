@@ -1,11 +1,12 @@
 """login.py - Module to handle /login API endpoint"""
 import uuid
-from flask import abort, current_app, g, jsonify
+from flask import current_app, g, jsonify
 from flask_jwt_extended import create_access_token, \
      jwt_required, \
      create_refresh_token, set_access_cookies, \
      set_refresh_cookies
 from facebook import GraphAPI
+from util.api_util import api_error
 from dm.User import User
 
 # Post method for login added 6/27/17 as part of moving from original
@@ -19,7 +20,7 @@ def post(login_data):
     # access_token for a Facebook login.
     if ('username' not in login_data or 'password' not in login_data)\
        and 'access_token' not in login_data:
-        abort(400, 'Either username/password or access_token are required')
+        return api_error(400, 'MISSING_USERNAME_API_KEY')
 
     # Get user based on username / password or access_token
     if 'username' in login_data:
@@ -29,7 +30,7 @@ def post(login_data):
                            .filter(User.username == login_data['username'])\
                            .one_or_none()
         if not user or not user.verify_password(login_data['password']):
-            abort(401, 'Invalid Username/Password Combination')
+            return api_error(401, 'INVALID_USERNAME_PASSWORD')
 
     # This section handles facebook login, and I expect it to be tested manually,
     # so it is explicitly excluded from code coverage metrics
@@ -37,14 +38,14 @@ def post(login_data):
         graph = GraphAPI(login_data['access_token'])
         if not graph:
             current_app.logger.debug('Unable to instantiate graph GraphAPI object')
-            return 'Unable to instantiate GraphAPI object', 401
+            return api_error(500, 'ERROR_FACEBOOK_MODULE')
         profile = graph.get_object('me?fields=id,name,email,first_name,last_name')
         if not profile:
             current_app.logger.debug('Unable to get profile')
-            return 'Unable to get profile for me', 401
+            return api_error(401, 'ERROR_FACEBOOK_PROFILE')
         current_app.logger.debug('Cool - got %s', profile)
         if not 'email' in profile:
-            return 'Must grant this app privilege to access your e-mail address', 401
+            return api_error(401, 'ERROR_FACEBOOK_PRIVILEGES')
         user = g.db_session.query(User)\
                            .filter(User.email == profile['email']).one_or_none()
     # Create the user if it does not exist
@@ -52,7 +53,10 @@ def post(login_data):
             user = User(
                 email=profile['email'],
                 username=profile['first_name'] + '.' + profile['last_name'],
+                first_name=profile['first_name'],
+                last_name=profile['last_name'],
                 user_id=uuid.uuid4().bytes,
+                source='Facebook',
                 roles='User')
             g.db_session.add(user)
             g.db_session.commit()

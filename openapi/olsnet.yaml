@@ -32,6 +32,10 @@ paths:
             properties:
               user_id:
                 type: string
+        400:
+          description: Request error
+          schema:
+            $ref: '#/definitions/Error'
         409:
           description: One or more user fields that should be unique are duplicated
     get:
@@ -47,6 +51,10 @@ paths:
             type: array
             items:
               $ref: '#/definitions/User'
+        400:
+          description: Request error
+          schema:
+            $ref: '#/definitions/Error'
       security:
         - main: []
   /users/{user_id}:
@@ -67,6 +75,10 @@ paths:
           description: User updated successfully
           schema:
             $ref: '#/definitions/loginUser'
+        400:
+          description: Request error
+          schema:
+            $ref: '#/definitions/Error'
         404:
           description: User not found
     put:
@@ -82,6 +94,10 @@ paths:
       responses:
         200:
           description: User updated successfully
+        400:
+          description: Request error
+          schema:
+            $ref: '#/definitions/Error'
         404:
           description: User not found
     delete:
@@ -91,6 +107,10 @@ paths:
       responses:
         204:
           description: User deleted successfully
+        400:
+          description: Request error
+          schema:
+            $ref: '#/definitions/Error'
         404:
           description: User not found
       security:
@@ -115,6 +135,10 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/loginUser'
+        400:
+          description: Request error
+          schema:
+            $ref: '#/definitions/Error'
         404:
           description: Invalid user or password
     get:
@@ -130,6 +154,10 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/loginUser'
+        400:
+          description: Request error
+          schema:
+            $ref: '#/definitions/Error'
         401:
           description: User not authenticated
       security:
@@ -148,8 +176,51 @@ paths:
           description: Successful response
         400:
           description: User not logged in
+          schema:
+            $ref: '#/definitions/Error'
       security:
         - main: []
+  /pw_reset:
+    post:
+      summary:
+        Requests that a password reset token be sent to the given email address
+      tags:
+        - Users
+      parameters:
+        - $ref: '#/parameters/reset_start'
+      description: |
+        Will request a password reset code be sent to the e-mail address provided in the form body.
+        Will result in an e-mail being sent with an access code. The access code will have a 15 minute timeout.
+        No new reset codes will be able to be generated for the same email address within the timeout window.
+        Will generate a refresh token if the email address is valid, the PUT verb for this endpoint will require
+        a valid refresh token.
+      responses:
+        200:
+          description: Successful response
+        400:
+          description: Request error
+          schema:
+            $ref: '#/definitions/Error'
+        404:
+          description: Email address not found
+    put:
+      summary:
+        Requests that the user's password be reset. Requires an e-mail address that matches the refresh token.
+        Also requires a reset code that has not timed out
+      tags:
+        - Users
+      parameters:
+        - $ref: '#/parameters/reset_finish'
+      description: |
+        Will reset the users password to the requested value if the refresh token is valid, matches the email address,
+        and the reset code is valid and current.
+      responses:
+        200:
+          description: Successful response
+        400:
+          description: Request error
+          schema:
+            $ref: '#/definitions/Error'
   # API to shut down the server
   /shutdown:
     post:
@@ -187,8 +258,60 @@ parameters:
     required: false
     type: string
     description: String to filter search with
+  reset_finish:
+    in: body
+    name: reset_finish
+    description: Fields required to complete password reset
+    schema:
+      type: object
+      required:
+        - email
+        - password
+        - reset_code
+      properties:
+        email:
+          type: string
+          description: User email address for password reset
+          minLength: 4
+          maxLength: 80
+        password:
+          type: string
+          description: New Password
+          minLength: 8
+          maxLength: 32
+        reset_code:
+          type: string
+          description: Reset code
+          minLength: 6
+          maxLength: 6
+  reset_start:
+    name: reset_start
+    in: body
+    description: Fields required to start password reset
+    schema:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          description: User email address for password reset
+          minLength: 4
+          maxLength: 80
 
 definitions:
+  Error:
+    type: object
+    properties:
+      key:
+        type: string
+        description: Unique identifier for error message
+      text:
+        type: string
+        description: Default english error message
+      error_code:
+        type: integer
+        description: Error code (equivalent to HTTP status code)
   Login:
     type: object
     properties:
@@ -225,6 +348,16 @@ definitions:
         type: string
         description: Email address
         minLength: 4
+        maxLength: 80
+      first_name:
+        type: string
+        description: First Name
+        minLength: 2
+        maxLength: 80
+      last_name:
+        type: string
+        description: Last Name
+        minLength: 2
         maxLength: 80
       phone:
         type: string
@@ -263,6 +396,9 @@ definitions:
           token:
             type: string
             description: Access token with expiration date
+          source:
+            type: string
+            description: Authentication source for this user (Facebook or Local)
   updateUser:
     allOf:
       - $ref: '#/definitions/User'
@@ -282,5 +418,5 @@ tags:
     description: APIs associated with application authentication
   - name: Users
     description: APIs associated with CRUD for users
-  - name: Test Utilitities
+  - name: Test Utilities
     description: APIs that should only be used by test utilities

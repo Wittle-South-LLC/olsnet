@@ -14,7 +14,13 @@ export function isd (from, to) {
   if (!result) {
     try {
       let d = diff(from.toJS(), to.toJS(), filterDiff)
-      console.log(d)
+      if (d) {
+        console.log(d)
+      } else {
+        console.log('is says objects are different, diff feels otherwise')
+        console.log('from: ', from.toJS())
+        console.log('to:   ', to.toJS())
+      }
     } catch (e) {
       console.log('TestUtils NOTE: Caught exception in diff', e, result)
       console.log('from = ', from.toJS())

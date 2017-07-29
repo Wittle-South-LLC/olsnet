@@ -17,9 +17,12 @@ export const USER_NAME = 'username'
 export const USER_ID = 'user_id'
 export const USER_PHONE = 'phone'
 export const USER_EMAIL = 'email'
+export const USER_FIRST_NAME = 'first_name'
+export const USER_LAST_NAME = 'last_name'
 export const USER_PREFERENCES = 'preferences'
 export const USER_ROLES = 'roles'
 export const USER_PASSWORD = 'password'
+export const USER_SOURCE = 'source'
 export const USER_NEW_PASSWORD = 'newPassword'
 export const USER_RECAPTCHA_RESPONSE = 'reCaptchaResponse'
 
@@ -27,9 +30,9 @@ export const USER_RECAPTCHA_RESPONSE = 'reCaptchaResponse'
 export const USER_STATE_PATH = ['user', 'current']
 
 // Validation checks for user fields
-const emailTest = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+export const emailTest = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+export const passwordTest = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,20}$/
 const phoneTest = /^[0-9]{10}$/
-const passwordTest = /^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{8,20}$/
 
 export class User extends ReduxObject {
   constructor (paramObj) {
@@ -51,9 +54,12 @@ export class User extends ReduxObject {
                          .set(USER_ID, undefined)
                          .set(USER_PHONE, '')
                          .set(USER_EMAIL, '')
+                         .set(USER_FIRST_NAME, '')
+                         .set(USER_LAST_NAME, '')
                          .set(USER_PREFERENCES, Map({}))
                          .set(USER_ROLES, '')
                          .set(USER_PASSWORD, undefined)
+                         .set(USER_SOURCE, '')
                          .set(USER_NEW_PASSWORD, undefined)
                          .set(USER_RECAPTCHA_RESPONSE, undefined)
     }
@@ -95,9 +101,12 @@ export class User extends ReduxObject {
   getUserId () { return this.data.get(USER_ID) }
   getUserPhone () { return this.data.get(USER_PHONE) }
   getUserEmail () { return this.data.get(USER_EMAIL) }
+  getFirstName () { return this.data.get(USER_FIRST_NAME) }
+  getLastName () { return this.data.get(USER_LAST_NAME) }
   getUserPreferences () { return this.data.get(USER_PREFERENCES) }
   getUserRoles () { return this.data.get(USER_ROLES) }
   getUserPassword () { return this.data.get(USER_PASSWORD) }
+  getSource () { return this.data.get(USER_SOURCE) }
   getNewPassword () { return this.data.get(USER_NEW_PASSWORD) }
   getReCaptchaResponse () { return this.data.get(USER_RECAPTCHA_RESPONSE) }
   // Convenience methods
@@ -111,6 +120,8 @@ export class User extends ReduxObject {
            this.getUserName().length <= 32
   }
   isEmailValid () { return this.getUserEmail() && emailTest.test(this.getUserEmail()) }
+  isFirstNameValid () { return this.getFirstName() && this.getFirstName().length >= 2 && this.getFirstName().length <= 80 }
+  isLastNameValid () { return this.getLastName() && this.getLastName().length >= 2 && this.getLastName().length <= 80 }
   isPasswordValid () { return this.getUserPassword() && passwordTest.test(this.getUserPassword()) }
   isNewPasswordValid () { return !this.getNewPassword() || passwordTest.test(this.getNewPassword()) }
   isPhoneValid () { return this.getUserPhone() && phoneTest.test(this.getUserPhone()) }
@@ -124,14 +135,18 @@ export class User extends ReduxObject {
            this.isPasswordValid() &&
            this.isPhoneValid() &&
            this.isUserNameValid() &&
+           this.isFirstNameValid() &&
+           this.isLastNameValid() &&
            this.isReCaptchaResponseValid()
   }
   isEditUserValid () {
     return this.isEmailValid() &&
-           this.isPasswordValid() &&
+           (this.isPasswordValid() || this.getSource() === 'Facebook') &&
            this.isNewPasswordValid() &&
            this.isPhoneValid() &&
-           this.isUserNameValid()
+           this.isUserNameValid() &&
+           this.isFirstNameValid() &&
+           this.isLastNameValid()
   }
 }
 

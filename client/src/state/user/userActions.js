@@ -86,6 +86,8 @@ export function registerUser (nextPath = undefined) {
         sendData: {
           username: myUser.getUserName(),
           email: myUser.getUserEmail(),
+          first_name: myUser.getFirstName(),
+          last_name: myUser.getLastName(),
           phone: myUser.getUserPhone(),
           preferences: myUser.getUserPreferences().toJS(),
           roles: myUser.getUserRoles(),
@@ -132,6 +134,8 @@ export function updateUser (user, nextPath = undefined) {
           username: user.getUserName(),
           password: user.getUserPassword(),
           email: user.getUserEmail(),
+          first_name: user.getFirstName(),
+          last_name: user.getLastName(),
           phone: user.getUserPhone(),
           preferences: user.getUserPreferences().toJS(),
           roles: user.getUserRoles()

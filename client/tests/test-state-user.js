@@ -24,9 +24,12 @@ userTestData[userRO.USER_NAME] = 'TestUser'
 userTestData[userRO.USER_ID] = '1b44827f-3757-4bbc-a37e-d9f44067bfb6'
 userTestData[userRO.USER_PHONE] = '9199293456'
 userTestData[userRO.USER_EMAIL] = 'testuser@wittle.net'
+userTestData[userRO.USER_FIRST_NAME] = 'First'
+userTestData[userRO.USER_LAST_NAME] = 'Last'
 userTestData[userRO.USER_PREFERENCES] = {'color': 'purple'}
 userTestData[userRO.USER_ROLES] = 'User'
 userTestData[userRO.USER_PASSWORD] = 'Password'
+userTestData[userRO.USER_SOURCE] = 'Local'
 userTestData[userRO.USER_NEW_PASSWORD] = 'New Password'
 userTestData[userRO.USER_RECAPTCHA_RESPONSE] = 'ReCaptcha Response'
 let fbUserData = {
@@ -54,6 +57,12 @@ describe('user: testing ReduxObject actions', () => {
   it('getUserEmail() returns user email', () => {
     expect(createUserTest.getUserEmail()).toEqual(userTestData[userRO.USER_EMAIL])
   })
+  it('getFirstName() returns first name', () => {
+    expect(createUserTest.getFirstName()).toEqual(userTestData[userRO.USER_FIRST_NAME])
+  })
+  it('getLastName() returns last name', () => {
+    expect(createUserTest.getLastName()).toEqual(userTestData[userRO.USER_LAST_NAME])
+  })
   it('getUserPhone() returns user phone', () => {
     expect(createUserTest.getUserPhone()).toEqual(userTestData[userRO.USER_PHONE])
   })
@@ -62,6 +71,9 @@ describe('user: testing ReduxObject actions', () => {
   })
   it('getUserRoles() returns user roles', () => {
     expect(createUserTest.getUserRoles()).toEqual(userTestData[userRO.USER_ROLES])
+  })
+  it('getSource() returns user source', () => {
+    expect(createUserTest.getSource()).toEqual(userTestData[userRO.USER_SOURCE])
   })
   it('getNewPassword() returns new password', () => {
     expect(createUserTest.getNewPassword()).toEqual(userTestData[userRO.USER_NEW_PASSWORD])
@@ -226,9 +238,9 @@ describe('user: testing reducing of asynchronous actions', () => {
     store.dispatch(registerUser('/cover'))
   })
   it('handles registerUser with an unsuccessful response', (done) => {
-    const stateRegisterFailed = setErrorMessage(stateRegisterInit, componentText.invalidRequest)
+    const stateRegisterFailed = setErrorMessage(stateRegisterInit, {id: 'DuplicateUser', defaultMessage: 'Error Message'})
     let store = createStore(testUserState, stateRegisterInit, applyMiddleware(thunkMiddleware))
-    nock(process.env.TEST_URL).post('/users').reply(400)
+    nock(process.env.TEST_URL).post('/users').reply(400, { key: 'DuplicateUser', text: 'Error Message', error_code: 400 })
     testAsync(store, undefined, stateRegisterFailed, done)
     store.dispatch(registerUser('email'))
   })

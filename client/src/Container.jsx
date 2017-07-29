@@ -159,7 +159,7 @@ export default class Container extends React.Component {
                 userId={myUser.getUserId()}
                 username={myUser.getUserName()}
                 messageType={this.state.reduxState.getIn(['fetchStatus', 'messageType'])}
-                message={this.context.intl.formatMessage(this.state.reduxState.getIn(['fetchStatus', 'message']))}>
+                message={this.context.intl.formatMessage(this.state.reduxState.getIn(['fetchStatus', 'message']).toJS())}>
         <Grid fluid={true} id="appName">
           <Row>
             <Switch>

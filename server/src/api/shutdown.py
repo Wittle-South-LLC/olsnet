@@ -1,13 +1,13 @@
 """shutdown.py - Implements API endpoint for /shutdown"""
-# from connexion import NoContent
 from flask import request
+from util.api_util import api_error
 
 def post(key):
     """Method to handle POST verb for /shutdown API endpoint"""
     if key['key'] == 'Eric':
         shutdown_server()
         return 'Server shutting down...\n'
-    return 'Invalid shutdown key - ' + str(key), 400
+    return api_error(400, 'INVALID_SHUTDOWN_KEY', key)
 
 # Code here to ensure that the test scripts can shut down
 # the server once it is launched

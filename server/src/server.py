@@ -65,7 +65,7 @@ FAPP.config['JWT_COOKIE_SECURE'] = False
 # your best interest to not send additional cookies in the request if
 # they aren't needed.
 FAPP.config['JWT_ACCESS_COOKIE_PATH'] = '/'
-FAPP.config['JWT_REFRESH_COOKIE_PATH'] = '/token_refresh'
+FAPP.config['JWT_REFRESH_COOKIE_PATH'] = '/api/v1/pw_reset'
 # Enable csrf double submit protection. See this for a thorough
 # explination: http://www.redotheweb.com/2015/11/09/api-security.html
 FAPP.config['JWT_COOKIE_CSRF_PROTECT'] = True
@@ -125,7 +125,6 @@ def after_request(resp):
     # reset the 15 minute clock
     if (resp.status_code) < 400 and 'user' in g and\
        not request.path in ['/api/v1/logout', '/api/v1/shutdown']:
-        LOGGER.debug('Setting access_tokens for ' + request.path)
         access_token = create_access_token(identity=g.user.get_uuid())
         set_access_cookies(resp, access_token)
     g.db_session.close()

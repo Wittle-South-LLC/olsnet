@@ -5,7 +5,6 @@
 # tests.
 """test-users-api.py - Tests of users APIs"""
 import logging
-#import requests_mock
 from TestUtil import get_response_with_jwt, get_new_session,\
                      log_response_error
 
@@ -38,6 +37,8 @@ def test_user_add_api_success():
         'username': "talw",
         'password': "testing1",
         'email': "tal@wittle.net",
+        'first_name': 'Tal',
+        'last_name': 'Lewin Wittle',
         'phone': '9194753337',
         'reCaptchaResponse': 'Dummy',
         'preferences': {'color': 'red'},
@@ -74,6 +75,7 @@ def test_initial_login_jwt():
     testing_id = json['user_id']
     assert json['username'] == 'testing'
     assert json['roles'] == 'Admin'
+    assert json['source'] == 'Local'
     assert 'preferences' in json
 
 def test_rehydrate():
@@ -83,6 +85,8 @@ def test_rehydrate():
     log_response_error(resp)
     json = resp.json()
     assert json['email'] == 'test@wittle.net'
+    assert json['first_name'] == 'Test'
+    assert json['last_name'] == 'User'
     assert json['phone'] == '9199999999'
     assert json['user_id']
     assert json['username'] == 'testing'
@@ -206,7 +210,7 @@ def test_add_duplicate_user():
         'preferences': {'color': 'red'}
     }
     resp = get_response_with_jwt(TEST_SESSION, 'POST', '/users', user_json)
-    assert resp.status_code == 409
+    assert resp.status_code == 400
 
 def test_lookup_invalid_user():
     """--> Test looking up an invalid user (code coverage)"""

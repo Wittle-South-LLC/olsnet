@@ -1,12 +1,12 @@
 /* fetchStatusReducer.js - reducer for fetch status */
-import { Map } from 'immutable'
+import { fromJS, Map } from 'immutable'
 import { SET_MESSAGE, FETCH_START, FETCH_SUCCESS, FETCH_ERROR,
          TRANSITION_TO, VERB_HYDRATE } from './fetchStatusActions'
 
 export function fetchStatus (state = Map({ fetching: false, message: undefined }), action) {
   if (action.type === SET_MESSAGE) {
     return state.delete('transitionTo')
-                .set('message', action.message)
+                .set('message', fromJS(action.message))
                 .set('messageType', action.messageType)
   } else if (action.type === TRANSITION_TO) {
     return state.set('transitionTo', action.newPath)
@@ -20,7 +20,7 @@ export function fetchStatus (state = Map({ fetching: false, message: undefined }
           newState = newState.set('transitionTo', action.nextPath)
         }
         if (action.successMsg) {
-          newState = newState.set('message', action.successMsg)
+          newState = newState.set('message', fromJS(action.successMsg))
                              .set('messageType', 'status')
         }
         return newState
@@ -30,7 +30,7 @@ export function fetchStatus (state = Map({ fetching: false, message: undefined }
         }
         let errState = state.set('fetching', false)
         if (action.verb !== VERB_HYDRATE) {
-          errState = errState.set('message', action.message)
+          errState = errState.set('message', fromJS(action.message))
                              .set('messageType', 'error')
         }
         return errState
