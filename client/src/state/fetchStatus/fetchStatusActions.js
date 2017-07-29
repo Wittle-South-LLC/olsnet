@@ -64,7 +64,16 @@ export function fetchReduxAction (payload, successPath = undefined) {
                     navigator.userAgent === 'node.js')) ? 'http://localhost:' + process.env.WEBSERVER_HOST_PORT : ''
     return fetch(baseUrl + process.env.API_PATH + payload.apiUrl, getApiHeaders(payload))
       .then(response => checkResponse(payload.method, response))
-      .then(json => dispatch(fetchSuccess(payload, json, successPath)))
+      .then(json => {
+        // Check for error_code in the json, if it exists, then the API
+        // call failed, and the json is a specific error message object
+        if ('error_code' in json && json['error_code'] === 400) {
+          const errMsg = { id: json['key'], defaultMessage: json['text'] }
+          throw errMsg
+        } else {
+          return dispatch(fetchSuccess(payload, json, successPath))
+        }
+      })
       .catch(error => dispatch(fetchError(payload, error)))
   }
 }
@@ -80,7 +89,9 @@ function checkResponse (httpVerb, response) {
       return undefined
     }
   } else if (response.status === 400) {
-    throw componentText.invalidRequest
+    // Returning response because we need the json object to get the specific error
+    // message from the server in the case of a 400 error
+    return response.json()
   } else if (response.status === 401) {
     throw componentText.invalidCredentials
   } else if (response.status === 409) {

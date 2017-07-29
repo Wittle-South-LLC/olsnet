@@ -210,7 +210,7 @@ def test_add_duplicate_user():
         'preferences': {'color': 'red'}
     }
     resp = get_response_with_jwt(TEST_SESSION, 'POST', '/users', user_json)
-    assert resp.status_code == 409
+    assert resp.status_code == 400
 
 def test_lookup_invalid_user():
     """--> Test looking up an invalid user (code coverage)"""

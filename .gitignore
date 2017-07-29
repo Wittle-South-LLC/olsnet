@@ -41,6 +41,7 @@ web/index.html
 server/src/__pycache__
 server/src/api/__pycache__
 server/src/dm/__pycache__
+server/src/util/__pycache__
 server/pip-selfcheck.json
 server/.Python
 

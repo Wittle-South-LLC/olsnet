@@ -9,6 +9,7 @@ from flask import current_app, g, make_response
 from flask_jwt_extended import jwt_refresh_token_required, get_jwt_identity,\
                                create_refresh_token, set_refresh_cookies
 from dm.User import User
+from util.api_util import api_error
 
 # Error response constants
 EMAIL_NOT_FOUND = 'Email not found'
@@ -22,11 +23,11 @@ def post(reset_start):
     reset_user = g.db_session.query(User).filter(User.email == reset_start['email']).one_or_none()
     # If not found, respond with a 404
     if not reset_user:
-        return EMAIL_NOT_FOUND, 404
+        return api_error(404, 'EMAIL_NOT_FOUND', reset_start['email'])
     # If found, check if the user already has a reset code that has not expired, and if so
     # return an error 400
     if reset_user.reset_code != None and reset_user.reset_expires > datetime.datetime.now():
-        return RESET_CODE_CURRENT, 400
+        return api_error(400, 'RESET_CODE_CURRENT')
     # Assign a reset code and expiration timestamp
     reset_user.reset_code = str(random.randint(100000, 999999))
     reset_user.reset_expires = datetime.datetime.now() + datetime.timedelta(minutes=15)
@@ -71,10 +72,10 @@ def put(reset_finish):
         current_app.logger.debug('reset_finish[reset_code] = ' + reset_finish['reset_code'])
         current_app.logger.debug('reset_user.reset_expires = ' + str(reset_user.reset_expires))
         current_app.logger.debug('datetime.datetime.now() = ' + str(datetime.datetime.now()))
-        return RESET_CODE_INVALID_OR_EXIRED, 400
+        return api_error(400, 'RESET_CODE_INVALID_OR_EXIRED')
     # Confirm the provided email matches the user that we're updating
     if reset_user.email != reset_finish['email']:
-        return RESET_EMAIL_MISMATCH, 400
+        return api_error(400, 'RESET_EMAIL_MISMATCH')
     # Now reset the user's password
     reset_user.hash_password(reset_finish['password'])
     reset_user.reset_code = None

@@ -238,9 +238,9 @@ describe('user: testing reducing of asynchronous actions', () => {
     store.dispatch(registerUser('/cover'))
   })
   it('handles registerUser with an unsuccessful response', (done) => {
-    const stateRegisterFailed = setErrorMessage(stateRegisterInit, componentText.invalidRequest)
+    const stateRegisterFailed = setErrorMessage(stateRegisterInit, {id: 'DuplicateUser', defaultMessage: 'Error Message'})
     let store = createStore(testUserState, stateRegisterInit, applyMiddleware(thunkMiddleware))
-    nock(process.env.TEST_URL).post('/users').reply(400)
+    nock(process.env.TEST_URL).post('/users').reply(400, { key: 'DuplicateUser', text: 'Error Message', error_code: 400 })
     testAsync(store, undefined, stateRegisterFailed, done)
     store.dispatch(registerUser('email'))
   })
