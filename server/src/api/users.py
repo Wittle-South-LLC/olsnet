@@ -25,6 +25,9 @@ def post(user):
     check_user = g.db_session.query(User).filter(User.username == user['username']).one_or_none()
     if check_user is not None:
         return 'User already exists', 409
+    if 'roles' in user and 'Admin' in user['roles'] and\
+       ('NODE_ENV' not in os.environ or os.environ['NODE_ENV'] != 'test'):
+        return 'Cannot assign Admin role during user creation', 400 # pragma: no cover
     # Confirm ReCaptcha is valid
     if 'NODE_ENV' in os.environ and os.environ['NODE_ENV'] == 'test':
         with requests_mock.Mocker(real_http=True) as mock:
