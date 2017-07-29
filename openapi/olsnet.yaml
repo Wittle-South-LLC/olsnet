@@ -32,6 +32,10 @@ paths:
             properties:
               user_id:
                 type: string
+        400:
+          description: Request error
+          schema:
+            $ref: '#/definitions/Error'
         409:
           description: One or more user fields that should be unique are duplicated
     get:
@@ -47,6 +51,10 @@ paths:
             type: array
             items:
               $ref: '#/definitions/User'
+        400:
+          description: Request error
+          schema:
+            $ref: '#/definitions/Error'
       security:
         - main: []
   /users/{user_id}:
@@ -67,6 +75,10 @@ paths:
           description: User updated successfully
           schema:
             $ref: '#/definitions/loginUser'
+        400:
+          description: Request error
+          schema:
+            $ref: '#/definitions/Error'
         404:
           description: User not found
     put:
@@ -82,6 +94,10 @@ paths:
       responses:
         200:
           description: User updated successfully
+        400:
+          description: Request error
+          schema:
+            $ref: '#/definitions/Error'
         404:
           description: User not found
     delete:
@@ -91,6 +107,10 @@ paths:
       responses:
         204:
           description: User deleted successfully
+        400:
+          description: Request error
+          schema:
+            $ref: '#/definitions/Error'
         404:
           description: User not found
       security:
@@ -115,6 +135,10 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/loginUser'
+        400:
+          description: Request error
+          schema:
+            $ref: '#/definitions/Error'
         404:
           description: Invalid user or password
     get:
@@ -130,6 +154,10 @@ paths:
           description: Successful response
           schema:
             $ref: '#/definitions/loginUser'
+        400:
+          description: Request error
+          schema:
+            $ref: '#/definitions/Error'
         401:
           description: User not authenticated
       security:
@@ -148,6 +176,8 @@ paths:
           description: Successful response
         400:
           description: User not logged in
+          schema:
+            $ref: '#/definitions/Error'
       security:
         - main: []
   /pw_reset:
@@ -155,7 +185,7 @@ paths:
       summary:
         Requests that a password reset token be sent to the given email address
       tags:
-        - Authentication
+        - Users
       parameters:
         - $ref: '#/parameters/reset_start'
       description: |
@@ -167,6 +197,10 @@ paths:
       responses:
         200:
           description: Successful response
+        400:
+          description: Request error
+          schema:
+            $ref: '#/definitions/Error'
         404:
           description: Email address not found
     put:
@@ -174,7 +208,7 @@ paths:
         Requests that the user's password be reset. Requires an e-mail address that matches the refresh token.
         Also requires a reset code that has not timed out
       tags:
-        - Authentication
+        - Users
       parameters:
         - $ref: '#/parameters/reset_finish'
       description: |
@@ -184,7 +218,9 @@ paths:
         200:
           description: Successful response
         400:
-          description: Request not valid
+          description: Request error
+          schema:
+            $ref: '#/definitions/Error'
   # API to shut down the server
   /shutdown:
     post:
@@ -264,6 +300,18 @@ parameters:
           maxLength: 80
 
 definitions:
+  Error:
+    type: object
+    properties:
+      key:
+        type: string
+        description: Unique identifier for error message
+      text:
+        type: string
+        description: Default english error message
+      error_code:
+        type: integer
+        description: Error code (equivalent to HTTP status code)
   Login:
     type: object
     properties:
@@ -370,5 +418,5 @@ tags:
     description: APIs associated with application authentication
   - name: Users
     description: APIs associated with CRUD for users
-  - name: Test Utilitities
+  - name: Test Utilities
     description: APIs that should only be used by test utilities
