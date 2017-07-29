@@ -37,6 +37,8 @@ def test_user_add_api_success():
         'username': "talw",
         'password': "testing1",
         'email': "tal@wittle.net",
+        'first_name': 'Tal',
+        'last_name': 'Lewin Wittle',
         'phone': '9194753337',
         'reCaptchaResponse': 'Dummy',
         'preferences': {'color': 'red'},
@@ -73,6 +75,7 @@ def test_initial_login_jwt():
     testing_id = json['user_id']
     assert json['username'] == 'testing'
     assert json['roles'] == 'Admin'
+    assert json['source'] == 'Local'
     assert 'preferences' in json
 
 def test_rehydrate():
@@ -82,6 +85,8 @@ def test_rehydrate():
     log_response_error(resp)
     json = resp.json()
     assert json['email'] == 'test@wittle.net'
+    assert json['first_name'] == 'Test'
+    assert json['last_name'] == 'User'
     assert json['phone'] == '9199999999'
     assert json['user_id']
     assert json['username'] == 'testing'

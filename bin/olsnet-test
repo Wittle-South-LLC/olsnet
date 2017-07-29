@@ -65,3 +65,5 @@ export OPENAPI_SPEC="/openapi/olsnet.yaml"
 # conditional logic for how this is set. Left here for compatibility with
 # olsnet-dev script, and to allow testing outside of the testme script
 export SERVER_COMMAND="python3 /app/server.py"
+
+export TEST_URL="http://localhost:${WEBSERVER_HOST_PORT}${API_PATH}"

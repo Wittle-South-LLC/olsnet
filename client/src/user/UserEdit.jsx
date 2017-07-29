@@ -71,6 +71,12 @@ export default class UserEdit extends React.Component {
       olsInvalidPhone: { id: 'UserEdit.olsInvalidPhone', defaultMessage: 'Invalid phone number' },
       olsRecaptchaResponse: { id: 'UserEdit.recaptchaResponse', defaultMessage: 'Must complete robot (recaptcha) test to register' },
       olsPasswordMismatch: { id: 'UserEdit.passwordMismatch', defaultMessage: 'Passwords do not match' },
+      firstNameLabel: { id: 'UserEdit.firstNameLabel', defaultMessage: 'First Name:' },
+      firstNamePlaceholder: { id: 'UserEdit.firstNamePlaceholder', defaultMessage: 'Enter first name...' },
+      invalidFirstName: { id: 'UserEdit.invalidFirstName', defaultMessage: 'First name must be at least 2 characters and no more than 80' },
+      lastNameLabel: { id: 'UserEdit.lastNameLabel', defaultMessage: 'Last Name:' },
+      lastNamePlaceholder: { id: 'UserEdit.lastNamePlaceholder', defaultMessage: 'Enter last name...' },
+      invalidLastName: { id: 'UserEdit.invalidLastName', defaultMessage: 'Last name must be at least 2 characters and no more than 80' },
       olsPasswordFormat: {
         id: 'UserEdit.passwordFormat',
         defaultMessage: 'Password must be at least 8 characters, and include both a number and a special character'
@@ -126,10 +132,16 @@ export default class UserEdit extends React.Component {
     }
   }
   validInput () {
-    if (!this.props.user.isUserNameValid()) { this.context.dispatch(setMessage(this.componentText.olsInvalidUserName, 'error')) }
-    else if (!this.props.user.isEmailValid()) { this.context.dispatch(setMessage(this.componentText.olsInvalidEmail, 'error')) }
-    else if (!this.props.user.isPhoneValid()) { this.context.dispatch(setMessage(this.componentText.olsInvalidPhone, 'error')) }
-    else if (!this.isEditMode() && !this.props.user.isReCaptchaResponseValid()) { this.context.dispatch(setMessage(this.componentText.olsRecaptchaResponse, 'error')) }
+    const user = this.props.user
+    const ctxt = this.componentText
+    const dispatch = this.context.dispatch
+    if (!user.isUserNameValid()) { dispatch(setMessage(ctxt.olsInvalidUserName, 'error')) }
+    else if (!user.isEmailValid()) { dispatch(setMessage(ctxt.olsInvalidEmail, 'error')) }
+    else if (!user.isFirstNameValid()) { dispatch(setMessage(ctxt.invalidFirstName, 'error')) }
+    else if (!user.isLastNameValid()) { dispatch(setMessage(ctxt.invalidLastName, 'error')) }
+    else if (!user.isPhoneValid()) { dispatch(setMessage(ctxt.olsInvalidPhone, 'error')) }
+    else if (!this.isEditMode() &&
+             !user.isReCaptchaResponseValid()) { dispatch(setMessage(ctxt.olsRecaptchaResponse, 'error')) }
     if (this.isEditMode()) {
       return this.props.user.isEditUserValid() &&
              this.props.user.getNewPassword() === this.state.newPassword2
@@ -205,6 +217,28 @@ export default class UserEdit extends React.Component {
                       onChange={this.onPW2Change} />
                   </FormGroup>
                 )}
+              </Col>
+              <Col md={6}>
+                <FormGroup validationState={this.props.user.isFirstNameValid() ? undefined : 'warning'}>
+                  <ControlLabel>{formatMessage(ctxt.firstNameLabel)}</ControlLabel>
+                  <FormControl
+                    type='text'
+                    id='first_name'
+                    placeholder={formatMessage(ctxt.firstNamePlaceholder)}
+                    value={this.props.user.getFirstName()}
+                    onChange={this.onFieldChange} />
+                </FormGroup>
+              </Col>
+              <Col md={6}>
+                <FormGroup validationState={this.props.user.isLastNameValid() ? undefined : 'warning'}>
+                  <ControlLabel>{formatMessage(ctxt.lastNameLabel)}</ControlLabel>
+                  <FormControl
+                    type='text'
+                    id='last_name'
+                    placeholder={formatMessage(ctxt.lastNamePlaceholder)}
+                    value={this.props.user.getLastName()}
+                    onChange={this.onFieldChange} />
+                </FormGroup>
               </Col>
               <Col md={6}>
                 <FormGroup validationState={this.props.user.isPhoneValid() ? undefined : 'warning'}>

@@ -94,7 +94,7 @@ fi
 
 # If we're running the server, then add the testing user
 if [ "$server_running" -gt "0" ]; then
-  export ADD_USER=$(curl -H "Content-Type: application/json" -X POST -d '{"username": "testing", "password":"testing0", "email": "test@wittle.net", "phone": "9199999999", "roles": "Admin", "reCaptchaResponse": "Nothing"}' http://localhost:8081/api/v1/users)
+  export ADD_USER=$(curl -H "Content-Type: application/json" -X POST -d '{"username": "testing", "password":"testing0", "email": "test@wittle.net", "phone": "9199999999", "first_name": "Test", "last_name": "User", "roles": "Admin", "reCaptchaResponse": "Nothing"}' http://localhost:8081/api/v1/users)
   echo "Add User returned $ADD_USER"
 fi
 

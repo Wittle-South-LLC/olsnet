@@ -301,6 +301,16 @@ definitions:
         description: Email address
         minLength: 4
         maxLength: 80
+      first_name:
+        type: string
+        description: First Name
+        minLength: 2
+        maxLength: 80
+      last_name:
+        type: string
+        description: Last Name
+        minLength: 2
+        maxLength: 80
       phone:
         type: string
         description: Phone number
@@ -338,6 +348,9 @@ definitions:
           token:
             type: string
             description: Access token with expiration date
+          source:
+            type: string
+            description: Authentication source for this user (Facebook or Local)
   updateUser:
     allOf:
       - $ref: '#/definitions/User'

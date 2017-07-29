@@ -42,6 +42,8 @@ def setUp():
         'username': "reset",
         'password': "reset000",
         'email': "reset@wittle.net",
+        'first_name': "Reset",
+        'last_name': "User",
         'phone': '9195746655',
         'reCaptchaResponse': 'Dummy',
         'preferences': {'color': 'red'},

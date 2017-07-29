@@ -47,8 +47,11 @@ def post(user):
         user_id=uuid.uuid4().bytes,
         username=user['username'],
         email=user['email'],
+        first_name=user['first_name'],
+        last_name=user['last_name'],
         phone=user['phone'],
-        roles=user['roles'])
+        roles=user['roles'],
+        source='Local')
     if 'preferences' in user:
         new_user.preferences = user['preferences']
     new_user.hash_password(user['password'])

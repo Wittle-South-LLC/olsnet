@@ -52,7 +52,10 @@ def post(login_data):
             user = User(
                 email=profile['email'],
                 username=profile['first_name'] + '.' + profile['last_name'],
+                first_name=profile['first_name'],
+                last_name=profile['last_name'],
                 user_id=uuid.uuid4().bytes,
+                source='Facebook',
                 roles='User')
             g.db_session.add(user)
             g.db_session.commit()
